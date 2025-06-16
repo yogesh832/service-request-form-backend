@@ -1,19 +1,47 @@
-
-// ✅ controllers/authController.js
 import * as authService from '../services/authService.js';
-import { createSendToken } from '../utils/jwtUtils.js';
+import { signToken } from '../utils/jwtUtils.js';
 import { sendEmail } from '../services/emailService.js';
+
+// Helper: send token in cookie + response
+const sendAuthToken = (user, statusCode, res, message) => {
+  const token = signToken(user._id);
+
+  // Cookie settings
+  const cookieOptions = {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production'
+  };
+
+  // res.cookie('jwt', token, cookieOptions);
+
+  res.status(statusCode).json({
+    status: 'success',
+    message,
+    token,
+    data: {
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    }
+  });
+};
 
 export const register = async (req, res, next) => {
   try {
     const user = await authService.registerUser(req.body);
-    // await sendEmail({
-    //   email: user.email,
-    //   subject: 'Welcome to SupportHub',
-    //   template: 'welcome',
-    //   data: { name: user.name }
-    // });
-    createSendToken(user, 201, res);
+
+    await sendEmail({
+      email: user.email,
+      subject: 'Welcome to SupportHub',
+      template: 'welcome',
+      data: { name: user.name }
+    });
+
+    sendAuthToken(user, 201, res, 'User registered successfully');
   } catch (error) {
     next(error);
   }
@@ -23,7 +51,7 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await authService.loginUser(email, password);
-    createSendToken(user, 200, res);
+    sendAuthToken(user, 200, res, 'Login successful');
   } catch (error) {
     next(error);
   }
@@ -32,14 +60,16 @@ export const login = async (req, res, next) => {
 export const forgotPassword = async (req, res, next) => {
   try {
     const { user, resetToken } = await authService.forgotPasswordUser(req.body.email);
-    const resetURL = `${req.protocol}://${req.get('host')}/api/auth/resetpassword/${resetToken}`;
-    // await sendEmail({
-    //   email: user.email,
-    //   subject: 'Password Reset Token',
-    //   template: 'passwordReset',
-    //   data: { name: user.name, resetURL }
-    // });
-    console.log(resetURL)
+
+    const resetURL = `https://yourdomain.com/reset-password/${resetToken}`;
+
+    await sendEmail({
+      email: user.email,
+      subject: 'Password Reset Token',
+      template: 'passwordReset',
+      data: { name: user.name, resetURL }
+    });
+
     res.status(200).json({ status: 'success', message: 'Reset token sent!' });
   } catch (error) {
     next(error);
@@ -49,7 +79,7 @@ export const forgotPassword = async (req, res, next) => {
 export const resetPassword = async (req, res, next) => {
   try {
     const user = await authService.resetPasswordUser(req.params.token, req.body.password);
-    createSendToken(user, 200, res);
+    sendAuthToken(user, 200, res, 'Password reset successful');
   } catch (error) {
     next(error);
   }
@@ -62,7 +92,7 @@ export const updatePassword = async (req, res, next) => {
       req.body.currentPassword,
       req.body.newPassword
     );
-    createSendToken(user, 200, res);
+    sendAuthToken(user, 200, res, 'Password updated successfully');
   } catch (error) {
     next(error);
   }
@@ -75,4 +105,3 @@ export const logout = (req, res) => {
   });
   res.status(200).json({ status: 'success', message: 'Logged out successfully' });
 };
-

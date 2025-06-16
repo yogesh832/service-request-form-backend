@@ -16,6 +16,10 @@ const ticketSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  number:{
+    type:String,
+    required:true
+  },
   status: {
     type: String,
     enum: ['open', 'pending', 'resolved'],
@@ -92,6 +96,8 @@ ticketSchema.pre('save', async function(next) {
     next(err);
   }
 });
+
+
 
 const Ticket = mongoose.model('Ticket', ticketSchema);
 export default Ticket;

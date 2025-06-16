@@ -1,6 +1,7 @@
 // controllers/ticketController.js
 import Ticket from '../models/Ticket.js';
 import AppError from '../utils/appError.js';
+import APIFeatures from '../utils/apiFeatures.js';
 
 
 // @desc    Get all tickets
@@ -137,6 +138,35 @@ export const deleteTicket = async (req, res, next) => {
     res.status(204).json({
       status: 'success',
       data: null
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Assign ticket to an employee
+// @route   PATCH /api/tickets/:id/assign
+// @access  Private/Admin
+export const assignTicket = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { assignedTo } = req.body;
+
+    const ticket = await Ticket.findByIdAndUpdate(
+      id,
+      { assignedTo },
+      { new: true, runValidators: true }
+    ).populate('assignedTo');
+
+    if (!ticket) {
+      return next(new AppError('No ticket found with that ID', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        ticket
+      }
     });
   } catch (error) {
     next(error);

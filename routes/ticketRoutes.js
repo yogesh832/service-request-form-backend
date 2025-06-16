@@ -5,12 +5,15 @@ import {
   getTicket,
   updateTicket,
   deleteTicket,
+  assignTicket,
+  
 } from "../controllers/ticketController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import {
   uploadTicketFiles,
   resizeTicketFiles,
 } from "../middlewares/uploadMiddleware.js";
+
 
 const router = express.Router();
 
@@ -23,5 +26,9 @@ router
   .get(getTicket)
   .patch(uploadTicketFiles, resizeTicketFiles, updateTicket)
   .delete(deleteTicket);
+router.patch(
+  "/:id/assign",
+  assignTicket
+);
 
 export default router;

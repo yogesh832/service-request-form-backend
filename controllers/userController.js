@@ -95,16 +95,15 @@ export const deleteUser = async (req, res, next) => {
 // @access  Private
 export const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
-
+    const user = await User.findById(req.user.id).select('-password');
     res.status(200).json({
       status: 'success',
       data: {
         user
       }
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -131,5 +130,20 @@ export const updateMe = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+// userController.js
+export const getEmployees = async (req, res) => {
+  try {
+    // Maan ke user model me role field hai jisme 'employee' store hota hai
+    const employees = await User.find({ role: 'employee' });
+    res.status(200).json({
+      status: 'success',
+      results: employees.length,
+      data: { employees }
+    });
+  } catch (error) {
+    res.status(500).json({ status: 'fail', message: error.message });
   }
 };
