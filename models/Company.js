@@ -27,10 +27,7 @@ const companySchema = new mongoose.Schema({
     unique: true,
     lowercase: true
   },
-  phone: {
-    type: String,
-    required: true
-  },
+
   plan: {
     type: String,
     enum: ['Starter', 'Professional', 'Enterprise'],
