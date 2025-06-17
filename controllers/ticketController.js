@@ -2,6 +2,8 @@
 import Ticket from '../models/Ticket.js';
 import AppError from '../utils/appError.js';
 import APIFeatures from '../utils/apiFeatures.js';
+import { sendEmail} from '../services/emailService.js';
+import {  ticketCreatedTemplate } from '../utils/emailTemplates.js'; // assume template function ka naam ye hai
 
 
 // @desc    Get all tickets
@@ -41,29 +43,65 @@ export const getAllTickets = async (req, res, next) => {
 // @desc    Create a new ticket
 // @route   POST /api/tickets
 // @access  Private
+// export const createTicket = async (req, res, next) => {
+//   try {
+//     const { subject, description, priority, category } = req.body;
+    
+//     const ticket = await Ticket.create({
+//       subject,
+//       description,
+//       priority,
+//       category,
+//       company: req.user.company, // Assuming user is associated with a company
+//       user: req.user._id
+//     });
+
+//     res.status(201).json({
+//       status: 'success',
+//       data: {
+//         ticket
+//       }
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 export const createTicket = async (req, res, next) => {
   try {
-    const { subject, description, priority, category } = req.body;
-    
+    const { subject, description, priority, category, phone } = req.body;
+
     const ticket = await Ticket.create({
       subject,
       description,
       priority,
       category,
-      company: req.user.company, // Assuming user is associated with a company
+      phone,
+      company: req.user.company,
       user: req.user._id
+    });
+
+    const populatedTicket = await Ticket.findById(ticket._id)
+      .populate('user company');
+
+    // Send Email to the user
+    await sendEmail({
+      to: populatedTicket.user.email,
+      subject: `Sakla Tech  Ticket Created: ${populatedTicket.ticketNumber}`,
+      html: ticketCreatedTemplate(populatedTicket)
     });
 
     res.status(201).json({
       status: 'success',
       data: {
-        ticket
+        ticket: populatedTicket
       }
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 // @desc    Get single ticket
 // @route   GET /api/tickets/:id
