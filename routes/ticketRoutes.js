@@ -6,29 +6,37 @@ import {
   updateTicket,
   deleteTicket,
   assignTicket,
-  
+  updateTicketStatus
 } from "../controllers/ticketController.js";
+
 import { protect } from "../middlewares/authMiddleware.js";
+
 import {
   uploadTicketFiles,
-  resizeTicketFiles,
+  processTicketFiles
 } from "../middlewares/uploadMiddleware.js";
-
 
 const router = express.Router();
 
+// Protect all routes
 router.use(protect);
 
-router.route("/").get(getAllTickets).post(createTicket);
+// Routes for tickets
+router
+  .route("/")
+  .get(getAllTickets)
+  .post(uploadTicketFiles, processTicketFiles, createTicket); // Apply middleware on create
 
 router
   .route("/:id")
   .get(getTicket)
-  .patch(uploadTicketFiles, resizeTicketFiles, updateTicket)
+  .patch(uploadTicketFiles, processTicketFiles, updateTicket) // Apply middleware on update
   .delete(deleteTicket);
-router.patch(
-  "/:id/assign",
-  assignTicket
-);
+
+// Route to assign a ticket
+router.patch("/:id/assign", assignTicket);
+
+// Route to update ticket status
+router.patch("/:id/status", updateTicketStatus);
 
 export default router;

@@ -13,16 +13,16 @@ export const welcomeEmail = ({ name }) => `
   <body>
     <div class="container">
       <div class="header">
-        <h1>Welcome to SupportHub!</h1>
+        <h1>Welcome to SALKA TECH!</h1>
       </div>
       <div class="content">
         <p>Hello ${name},</p>
-        <p>Thank you for registering with SupportHub. We're excited to have you on board!</p>
+        <p>Thank you for registering with SALKA TECH. We're excited to have you on board!</p>
         <p>You can now log in to your account and start managing your support tickets.</p>
         <p>If you have any questions, please don't hesitate to contact our support team.</p>
       </div>
       <div class="footer">
-        <p>© ${new Date().getFullYear()} SupportHub. All rights reserved.</p>
+        <p>© ${new Date().getFullYear()} SALKA TECH. All rights reserved.</p>
       </div>
     </div>
   </body>
@@ -55,7 +55,7 @@ export const passwordResetEmail = ({ name, resetURL }) => `
         <p>This link is valid for 10 minutes only.</p>
       </div>
       <div class="footer">
-        <p>© ${new Date().getFullYear()} SupportHub. All rights reserved.</p>
+        <p>© ${new Date().getFullYear()} SALKA TECH. All rights reserved.</p>
       </div>
     </div>
   </body>

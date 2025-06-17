@@ -172,3 +172,28 @@ export const assignTicket = async (req, res, next) => {
     next(error);
   }
 };
+
+// Add status update controller
+export const updateTicketStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const ticket = await Ticket.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!ticket) {
+      return next(new AppError('No ticket found with that ID', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        ticket
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};

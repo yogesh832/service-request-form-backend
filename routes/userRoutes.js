@@ -9,11 +9,14 @@ import {
   getEmployees
 } from '../controllers/userController.js';
 import { protect, restrictTo } from '../middlewares/authMiddleware.js';
+import { uploadUserPhoto, resizeUserPhoto } from '../middlewares/uploadMiddleware.js';
+
 
 const router = express.Router();
 
 router.get('/me', protect, getMe);
-router.patch('/me', protect, updateMe);
+router.patch('/me', protect,  uploadUserPhoto,
+  resizeUserPhoto, updateMe);
 
 
 router.use(protect, restrictTo('admin'));

@@ -110,12 +110,19 @@ export const getMe = async (req, res, next) => {
 // @desc    Update current user
 // @route   PATCH /api/users/me
 // @access  Private
+// Add to updateMe controller
 export const updateMe = async (req, res, next) => {
   try {
     // Filter out unwanted fields
     const filteredBody = {};
     if (req.body.name) filteredBody.name = req.body.name;
     if (req.body.email) filteredBody.email = req.body.email;
+    if (req.body.phone) filteredBody.phone = req.body.phone;
+    
+    // Handle file upload
+    if (req.file) {
+      filteredBody.profilePhoto = `/uploads/${req.file.filename}`;
+    }
 
     const user = await User.findByIdAndUpdate(req.user._id, filteredBody, {
       new: true,
@@ -132,7 +139,6 @@ export const updateMe = async (req, res, next) => {
     next(error);
   }
 };
-
 // userController.js
 export const getEmployees = async (req, res) => {
   try {
@@ -147,3 +153,4 @@ export const getEmployees = async (req, res) => {
     res.status(500).json({ status: 'fail', message: error.message });
   }
 };
+
