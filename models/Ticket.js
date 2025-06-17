@@ -30,11 +30,11 @@ const ticketSchema = new mongoose.Schema({
     enum: ['low', 'medium', 'high'],
     default: 'medium'
   },
-  category: {
-    type: String,
-    enum: ['technical', 'billing', 'general', 'account'],
-    default: 'general'
-  },
+category: {
+  type: String,
+  enum: ['technical', 'billing', 'account', 'delivery', 'other'],
+  default: 'technical'
+},
   company: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Company',

@@ -1,6 +1,7 @@
 import * as authService from '../services/authService.js';
 import { signToken } from '../utils/jwtUtils.js';
 import { sendEmail } from '../services/emailService.js';
+import { passwordResetEmail , welcomeEmail } from '../utils/emailTemplates.js';
 
 // Helper: send token in cookie + response
 const sendAuthToken = (user, statusCode, res, message) => {
@@ -35,10 +36,9 @@ export const register = async (req, res, next) => {
     const user = await authService.registerUser(req.body);
 
     await sendEmail({
-      email: user.email,
-      subject: 'Welcome to SAKLA TECH',
-      template: 'welcome',
-      data: { name: user.name }
+      to: user.email,
+      subject: `Welcome to Sakla Tech, ${user.name}!`,
+      html: welcomeEmail(user.name)
     });
 
     sendAuthToken(user, 201, res, 'User registered successfully');
@@ -64,10 +64,9 @@ export const forgotPassword = async (req, res, next) => {
     const resetURL = `https://yourdomain.com/reset-password/${resetToken}`;
 
     await sendEmail({
-      email: user.email,
-      subject: 'Password Reset Token',
-      template: 'passwordReset',
-      data: { name: user.name, resetURL }
+      to: user.email,
+      subject: 'Password Reset',
+      html: passwordResetEmail({ name: user.name, resetURL })
     });
 
     res.status(200).json({ status: 'success', message: 'Reset token sent!' });
