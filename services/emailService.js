@@ -6,8 +6,10 @@ import {
   ticketCreatedTemplate,
 } from "../utils/emailTemplates.js";
 
-// Ethereal testing SMTP setup
-let testAccount = await nodemailer.createTestAccount(); // 👈 creates test credentials
+
+
+// // Ethereal testing SMTP setup
+// let testAccount = await nodemailer.createTestAccount(); // 👈 creates test credentials
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",

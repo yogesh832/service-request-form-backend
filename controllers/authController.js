@@ -25,7 +25,8 @@ const sendAuthToken = (user, statusCode, res, message) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        profilePhoto: user.profilePhoto || null
       }
     }
   });
@@ -61,7 +62,7 @@ export const forgotPassword = async (req, res, next) => {
   try {
     const { user, resetToken } = await authService.forgotPasswordUser(req.body.email);
 
-    const resetURL = `https://yourdomain.com/reset-password/${resetToken}`;
+    const resetURL = `https://5vwd9w13-5173.inc1.devtunnels.ms/reset-password/${resetToken}`;
 
     await sendEmail({
       to: user.email,

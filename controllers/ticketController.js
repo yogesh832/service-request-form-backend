@@ -4,7 +4,7 @@ import AppError from '../utils/appError.js';
 import APIFeatures from '../utils/apiFeatures.js';
 import { sendEmail} from '../services/emailService.js';
 import {  ticketCreatedTemplate } from '../utils/emailTemplates.js'; // assume template function ka naam ye hai
-
+import User from "../models/User.js";
 
 // @desc    Get all tickets
 // @route   GET /api/tickets
@@ -12,6 +12,7 @@ import {  ticketCreatedTemplate } from '../utils/emailTemplates.js'; // assume t
 export const getAllTickets = async (req, res, next) => {
   try {
     let filter = {};
+    
     if (req.user.role === 'client') {
       filter.user = req.user._id;
     } else if (req.user.role === 'employee') {
@@ -27,7 +28,23 @@ export const getAllTickets = async (req, res, next) => {
       .limitFields()
       .paginate();
 
-    const tickets = await features.query.populate('user assignedTo company');
+    const tickets = await features.query
+      .populate([
+        {
+          path: 'user',
+          populate: {
+            path: 'company', // nested populate inside user
+            model: 'Company'
+          }
+        },
+        {
+          path: 'assignedTo',
+          select: 'name email role phone' // optional: only select certain fields
+        },
+        {
+          path: 'company'
+        }
+      ]);
 
     res.status(200).json({
       status: 'success',
@@ -40,6 +57,7 @@ export const getAllTickets = async (req, res, next) => {
     next(error);
   }
 };
+
 // @desc    Create a new ticket
 // @route   POST /api/tickets
 // @access  Private
@@ -67,6 +85,7 @@ export const getAllTickets = async (req, res, next) => {
 //   }
 // };
 
+
 export const createTicket = async (req, res, next) => {
   try {
     const { subject, description, priority, category, phone } = req.body;
@@ -78,24 +97,33 @@ export const createTicket = async (req, res, next) => {
       category,
       phone,
       company: req.user.company,
-      user: req.user._id
+      user: req.user._id,
+      attachments: req.attachments || [] // Use processed attachments
     });
+    // Map Cloudinary files to attachment object
+    const attachments = req.files?.map(file => ({
+      originalname: file.originalname,
+      filename: file.filename,
+      path: file.path,           // Cloudinary URL
+      size: file.size,
+      mimetype: file.mimetype
+    })) || [];
+
+ 
 
     const populatedTicket = await Ticket.findById(ticket._id)
       .populate('user company');
 
-    // Send Email to the user
+    // Send email if needed
     await sendEmail({
       to: populatedTicket.user.email,
-      subject: `Sakla Tech  Ticket Created: ${populatedTicket.ticketNumber}`,
+      subject: `Sakla Tech Ticket Created: ${populatedTicket.ticketNumber}`,
       html: ticketCreatedTemplate(populatedTicket)
     });
 
     res.status(201).json({
       status: 'success',
-      data: {
-        ticket: populatedTicket
-      }
+      data: { ticket: populatedTicket }
     });
   } catch (error) {
     next(error);
@@ -140,12 +168,21 @@ export const getTicket = async (req, res, next) => {
 // @desc    Update ticket
 // @route   PATCH /api/tickets/:id
 // @access  Private
+
 export const updateTicket = async (req, res, next) => {
   try {
-    const ticket = await Ticket.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    const updateData = { ...req.body };
+    
+    // Add new attachments if uploaded
+    if (req.attachments) {
+      updateData.$push = { attachments: { $each: req.attachments } };
+    }
+
+    const ticket = await Ticket.findByIdAndUpdate(
+      req.params.id, 
+      updateData, 
+      { new: true, runValidators: true }
+    );
 
     if (!ticket) {
       return next(new AppError('No ticket found with that ID', 404));
@@ -229,6 +266,33 @@ export const updateTicketStatus = async (req, res, next) => {
       status: 'success',
       data: {
         ticket
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+// Add this to ticketController.js
+export const getEmployeesForTicket = async (req, res, next) => {
+  try {
+        const { ticketId } = req.params; 
+    const ticket = await Ticket.findById(ticketId).populate('company');
+    console.log(ticketId)
+    console.log(ticket.company._id)
+    if (!ticket) {
+      return next(new AppError('No ticket found with that ID', 404));
+    }
+
+    // Find employees who belong to the ticket's company
+    const employees = await User.find({
+      company: ticket.company._id,
+      role: 'employee'
+    }).select('name email role phone profilePhoto'); // Select only necessary fields
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        employees
       }
     });
   } catch (error) {

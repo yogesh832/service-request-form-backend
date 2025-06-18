@@ -7,36 +7,36 @@ import {
   deleteTicket,
   assignTicket,
   updateTicketStatus
+  ,getEmployeesForTicket
 } from "../controllers/ticketController.js";
 
 import { protect } from "../middlewares/authMiddleware.js";
-
-import {
-  uploadTicketFiles,
-  processTicketFiles
-} from "../middlewares/uploadMiddleware.js";
+import { uploadTicketFiles, processTicketFiles } from "../middlewares/uploadMiddleware.js";
+import User from "../models/User.js";
 
 const router = express.Router();
-
-// Protect all routes
+router.get('/:ticketId/employees', getEmployeesForTicket);
 router.use(protect);
 
-// Routes for tickets
-router
-  .route("/")
+router.route("/")
   .get(getAllTickets)
-  .post(uploadTicketFiles, processTicketFiles, createTicket); // Apply middleware on create
+  .post(
+    uploadTicketFiles, // Cloudinary upload
+    processTicketFiles, // Process to req.attachments
+    createTicket
+  );
 
-router
-  .route("/:id")
+router.route("/:id")
   .get(getTicket)
-  .patch(uploadTicketFiles, processTicketFiles, updateTicket) // Apply middleware on update
+  .patch(
+    uploadTicketFiles,
+    processTicketFiles,
+    updateTicket
+  )
   .delete(deleteTicket);
 
-// Route to assign a ticket
 router.patch("/:id/assign", assignTicket);
-
-// Route to update ticket status
 router.patch("/:id/status", updateTicketStatus);
+// Add this to ticketRoutes.js
 
 export default router;

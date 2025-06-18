@@ -7,29 +7,22 @@ export const welcomeEmail = ({ name }) => `
         margin: 0;
         padding: 0;
         font-family: 'Segoe UI', sans-serif;
-        background: linear-gradient(135deg, #667eea, #764ba2, #ff6a00);
-        background-size: 400% 400%;
-        animation: gradientMove 15s ease infinite;
-      }
-      @keyframes gradientMove {
-        0% {background-position: 0% 50%;}
-        50% {background-position: 100% 50%;}
-        100% {background-position: 0% 50%;}
+        background-color: #f4f4f4;
+        color: #333;
       }
       .container {
         max-width: 600px;
         margin: 40px auto;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
+        background: #ffffff;
+        border-radius: 12px;
         padding: 30px;
-        backdrop-filter: blur(12px);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-        color: #fff;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
       }
       .header {
         text-align: center;
         font-size: 28px;
         font-weight: bold;
+        color: #4b0082;
         margin-bottom: 20px;
       }
       .content {
@@ -40,7 +33,7 @@ export const welcomeEmail = ({ name }) => `
         margin-top: 30px;
         text-align: center;
         font-size: 0.85em;
-        color: rgba(255, 255, 255, 0.6);
+        color: #777;
       }
     </style>
   </head>
@@ -62,6 +55,7 @@ export const welcomeEmail = ({ name }) => `
 `;
 
 
+
 export const passwordResetEmail = ({ name, resetURL }) => `
   <!DOCTYPE html>
   <html>
@@ -71,31 +65,23 @@ export const passwordResetEmail = ({ name, resetURL }) => `
         margin: 0;
         padding: 0;
         font-family: 'Segoe UI', sans-serif;
-        background: linear-gradient(135deg, #1f005c, #5b0060, #870160, #ac255e, #ca485c);
-        background-size: 400% 400%;
-        animation: gradientShift 20s ease infinite;
-      }
-      @keyframes gradientShift {
-        0% {background-position: 0% 50%;}
-        50% {background-position: 100% 50%;}
-        100% {background-position: 0% 50%;}
+        background-color: #f4f4f4;
+        color: #333;
       }
       .container {
         max-width: 600px;
         margin: 40px auto;
-        background: rgba(255, 255, 255, 0.07);
-        border-radius: 20px;
+        background: #ffffff;
+        border-radius: 12px;
         padding: 30px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-        color: #fff;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
       }
       .header {
         text-align: center;
         font-size: 26px;
         font-weight: bold;
         margin-bottom: 20px;
-        color: #ffd6ff;
+        color: #800080;
       }
       .content {
         font-size: 16px;
@@ -104,23 +90,22 @@ export const passwordResetEmail = ({ name, resetURL }) => `
       .button {
         display: inline-block;
         margin: 20px 0;
-        background: linear-gradient(to right, #00c9ff, #92fe9d);
+        background: #4caf50;
+        color: #fff;
         padding: 12px 24px;
         text-decoration: none;
-        color: #000;
         font-weight: bold;
-        border-radius: 30px;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-        transition: transform 0.2s ease;
+        border-radius: 6px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       }
       .button:hover {
-        transform: translateY(-2px);
+        background: #45a049;
       }
       .footer {
         margin-top: 30px;
         text-align: center;
         font-size: 0.85em;
-        color: rgba(255, 255, 255, 0.6);
+        color: #777;
       }
     </style>
   </head>
@@ -146,113 +131,63 @@ export const passwordResetEmail = ({ name, resetURL }) => `
 
 
 
+
 export const ticketCreatedTemplate = (ticket) => {
   return `
-  <!DOCTYPE html>
-  <html>
+    <!DOCTYPE html>
+    <html>
     <head>
       <style>
         body {
           margin: 0;
           padding: 0;
           font-family: 'Segoe UI', sans-serif;
-          background: linear-gradient(120deg, #1e1e2f, #3a2a60, #1e2e43);
-          background-size: 200% 200%;
-          animation: auroraFlow 15s ease infinite;
-          color: #ffffff;
+          background-color: #f4f4f4;
+          color: #333;
         }
-
-        @keyframes auroraFlow {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-
         .container {
-          max-width: 700px;
+          max-width: 650px;
           margin: 40px auto;
-          padding: 35px;
-          background: rgba(255, 255, 255, 0.08);
-          border-radius: 30px;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
-                      inset 0 5px 10px rgba(255, 255, 255, 0.05),
-                      inset 0 -5px 10px rgba(0, 0, 0, 0.2);
-          backdrop-filter: blur(14px);
+          padding: 30px;
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
-
         h2 {
           text-align: center;
-          font-size: 28px;
+          color: #4b0082;
           margin-bottom: 24px;
-          background: linear-gradient(to right, #00f7ff, #8a2be2);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
         }
-
-        .highlight {
-          background: linear-gradient(45deg, #fcb045, #fd1d1d, #833ab4);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          font-weight: bold;
-        }
-
         table {
           width: 100%;
           border-collapse: collapse;
-          border-radius: 12px;
-          overflow: hidden;
-          margin-top: 20px;
-          box-shadow: 0 4px 30px rgba(0,0,0,0.2);
         }
-
         td {
-          padding: 12px 16px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background-color: rgba(255, 255, 255, 0.05);
+          padding: 10px 15px;
+          border: 1px solid #ddd;
         }
-
-        tr:nth-child(even) td {
-          background-color: rgba(255, 255, 255, 0.08);
+        tr:nth-child(even) {
+          background-color: #f9f9f9;
         }
-
-        p {
-          margin: 14px 0;
-          line-height: 1.6;
-        }
-
         .footer {
           font-size: 12px;
           text-align: center;
-          color: rgba(255, 255, 255, 0.6);
+          color: #777;
           margin-top: 30px;
         }
-
         hr {
           border: none;
-          border-top: 1px solid rgba(255, 255, 255, 0.2);
+          border-top: 1px solid #ccc;
           margin: 30px 0;
         }
-
-        .cta-button {
-          display: inline-block;
-          background: linear-gradient(to right, #ff416c, #ff4b2b);
-          padding: 12px 24px;
-          border-radius: 25px;
-          color: white;
-          text-decoration: none;
-          font-weight: 600;
-          margin-top: 20px;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
       </style>
     </head>
     <body>
       <div class="container">
-        <h2>🎫 Ticket Created - <span class="highlight">${ticket.ticketNumber}</span></h2>
+        <h2>🎫 Ticket Created - ${ticket.ticketNumber}</h2>
 
         <p>Hello <strong>${ticket.user.name}</strong>,</p>
-        <p>Thank you for contacting <strong>SALKA TECH</strong> support. Your ticket has been successfully created. Please find the details below:</p>
+        <p>Thank you for contacting <strong>SALKA TECH</strong> support. Your ticket has been successfully created. Here are the details:</p>
 
         <table>
           <tr><td><strong>Ticket Number</strong></td><td>${ticket.ticketNumber}</td></tr>
@@ -270,18 +205,17 @@ export const ticketCreatedTemplate = (ticket) => {
           }
         </table>
 
-        <p style="margin-top: 20px;">Our team will review your request and respond as soon as possible. You can track this ticket in your dashboard.</p>
-
-        <a href="https://yourdomain.com/dashboard/tickets/${ticket._id}" class="cta-button">View Ticket</a>
+        <p style="margin-top: 20px;">Our team will review your request and respond shortly.</p>
 
         <hr />
 
         <div class="footer">
-          This is an automated message from <strong>SALKA TECH</strong>. Please do not reply directly to this email.<br />
-          &copy; ${new Date().getFullYear()} SALKA TECH. All rights reserved.
+          This is an automated email from <strong>SALKA TECH</strong>. Please do not reply to this message.
         </div>
       </div>
     </body>
-  </html>
+    </html>
   `;
 };
+
+

@@ -95,7 +95,15 @@ export const deleteUser = async (req, res, next) => {
 // @access  Private
 export const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user.id)
+      .select('-password')
+      .populate({
+        path: 'company',
+        select: 'name' // Sirf name chahiye to select use karo
+      });
+
+    console.log('Current user:', user);
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -107,22 +115,29 @@ export const getMe = async (req, res, next) => {
   }
 };
 
+
 // @desc    Update current user
 // @route   PATCH /api/users/me
 // @access  Private
 // Add to updateMe controller
+// ... existing imports ...
 export const updateMe = async (req, res, next) => {
   try {
-    // Filter out unwanted fields
+    console.log('Request body:', req.body.name); // Log the body
+    console.log('Request file:', req.file); // Log the file
+
     const filteredBody = {};
     if (req.body.name) filteredBody.name = req.body.name;
     if (req.body.email) filteredBody.email = req.body.email;
     if (req.body.phone) filteredBody.phone = req.body.phone;
-    
-    // Handle file upload
-    if (req.file) {
-      filteredBody.profilePhoto = `/uploads/${req.file.filename}`;
+    if (req.body.about) filteredBody.about = req.body.about;
+
+    if (req.file && req.file.path) {
+      filteredBody.profilePhoto = req.file.path;
+      console.log('Profile photo path:', filteredBody.profilePhoto);
     }
+   
+
 
     const user = await User.findByIdAndUpdate(req.user._id, filteredBody, {
       new: true,
@@ -131,14 +146,16 @@ export const updateMe = async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      data: {
-        user
-      }
+      data: { user }
     });
   } catch (error) {
+    console.error('UpdateMe error:', error); // Detailed error logging
     next(error);
   }
 };
+
+// ... other functions remain unchanged ...
+
 // userController.js
 export const getEmployees = async (req, res) => {
   try {
