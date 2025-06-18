@@ -62,7 +62,7 @@ export const forgotPassword = async (req, res, next) => {
   try {
     const { user, resetToken } = await authService.forgotPasswordUser(req.body.email);
 
-    const resetURL = `https://5vwd9w13-5173.inc1.devtunnels.ms/reset-password/${resetToken}`;
+    const resetURL = `https://localhost:5173/reset-password/${resetToken}`;
 
     await sendEmail({
       to: user.email,
