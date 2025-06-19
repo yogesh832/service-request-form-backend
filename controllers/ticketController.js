@@ -285,7 +285,7 @@ export const getEmployeesForTicket = async (req, res, next) => {
 
     // Find employees who belong to the ticket's company
     const employees = await User.find({
-      company: ticket.company._id,
+      // company: ticket.company._id,
       role: 'employee'
     }).select('name email role phone profilePhoto'); // Select only necessary fields
 
