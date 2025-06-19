@@ -15,14 +15,14 @@ const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
   auth: {
-    user: "shakyadeveloper@gmail.com",
-    pass: "rpylrjvzcwvkhxyb",
+    user: "contact.salkatech@gmail.com",
+    pass: "ndxwlggpexolbklv",
   },
 });
 
 export const sendEmail = async ({ to, subject, html }) => {
   const mailOptions = {
-    from: `Sakla Tech <${"shakyadeveloper@gmail.com"}>`,
+    from: `Sakla Tech <${"contact.salkatech@gmail.com"}>`,
     to,
     subject,
     html,

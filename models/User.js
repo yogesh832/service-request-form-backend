@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
     ref: 'Company',
     required: function() {
       
-      return this.role !== 'admin';
+      return this.role !== 'admin' && this.role !== 'employee'; // Only require company for clients
     }
   },
 
