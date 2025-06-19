@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
     }, 
   profilePhoto: { // Added profile photo field
     type: String,
-    default: null
+    default: null,
   },
   company: {
     type: mongoose.Schema.Types.ObjectId,
