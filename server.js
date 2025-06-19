@@ -15,12 +15,28 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
-app.use(cors({
-  origin: 'https://salka-tech-service-request-form.vercel.app', // Your Vite frontend URL
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// ✅ Allowed Origins List
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://salka-tech-service-request-form.vercel.app',
+  'https://your-other-vercel-url.vercel.app', // <-- Add more if needed
+];
+
+// ✅ CORS Middleware with Dynamic Origin Check
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('❌ Not allowed by CORS: ' + origin));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
