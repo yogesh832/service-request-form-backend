@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middlewares
 app.use(cors({
-  origin: 'https://dist-developershakyas-projects.vercel.app/', // Your Vite frontend URL
+  origin: 'https://salka-tech-service-request-form.vercel.app', // Your Vite frontend URL
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
