@@ -5,15 +5,17 @@ import APIFeatures from '../utils/apiFeatures.js';
 // @desc    Get all users
 // @route   GET /api/users
 // @access  Private/Admin
+
 export const getAllUsers = async (req, res, next) => {
   try {
-    const features = new APIFeatures(User.find(), req.query)
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate();
+    let query = User.find().populate({
+      path: 'company',
+      select: 'name' // Ensure we're populating the company name
+    });
 
-    const users = await features.query.select('-password');
+  
+
+    const users = await query.select('-password');
 
     res.status(200).json({
       status: 'success',
@@ -26,6 +28,7 @@ export const getAllUsers = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // @desc    Get single user
 // @route   GET /api/users/:id

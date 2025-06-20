@@ -9,6 +9,9 @@ import userRoutes from './routes/userRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import exportRoutes from './routes/exportRoutes.js';
+// server.js (add this with other imports)
+import analyticsRoutes from './routes/analyticsRoutes.js';
+
 dotenv.config();
 
 const app = express();
@@ -57,6 +60,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/export', exportRoutes);
+
+// Add this after other route declarations
+app.use('/api/analytics', analyticsRoutes);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
