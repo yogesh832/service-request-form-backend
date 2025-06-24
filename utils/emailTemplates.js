@@ -219,3 +219,20 @@ export const ticketCreatedTemplate = (ticket) => {
 };
 
 
+export const ticketReminderTemplate = (employeeName, tickets) => {
+  const ticketListHtml = tickets.map(ticket =>
+    `<li><strong>${ticket.ticketNumber}</strong>: ${ticket.subject} (Status: ${ticket.status})</li>`
+  ).join('');
+
+  return `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #007bff;">Hello ${employeeName},</h2>
+      <p>You have <strong>${tickets.length}</strong> pending/open tickets assigned to you. Please review and resolve them as soon as possible.</p>
+      <ul>
+        ${ticketListHtml}
+      </ul>
+      <p>Thank you for your attention to these tickets.</p>
+      <p>Best regards,<br/>Sakla Tech Support Team</p>
+    </div>
+  `;
+};

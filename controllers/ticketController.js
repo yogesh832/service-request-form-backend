@@ -3,7 +3,7 @@ import Ticket from '../models/Ticket.js';
 import AppError from '../utils/appError.js';
 import APIFeatures from '../utils/apiFeatures.js';
 import { sendEmail} from '../services/emailService.js';
-import {  ticketCreatedTemplate } from '../utils/emailTemplates.js'; // assume template function ka naam ye hai
+import { ticketCreatedTemplate, ticketReminderTemplate } from '../utils/emailTemplates.js';
 import User from "../models/User.js";
 
 // @desc    Get all tickets
@@ -61,36 +61,82 @@ export const getAllTickets = async (req, res, next) => {
 // @desc    Create a new ticket
 // @route   POST /api/tickets
 // @access  Private
+
+
 // export const createTicket = async (req, res, next) => {
 //   try {
-//     const { subject, description, priority, category } = req.body;
-    
+//     const { subject, description, priority, category, phone } = req.body;
+
 //     const ticket = await Ticket.create({
 //       subject,
 //       description,
 //       priority,
 //       category,
-//       company: req.user.company, // Assuming user is associated with a company
-//       user: req.user._id
+//       phone,
+//       company: req.user.company,
+//       user: req.user._id,
+//       attachments: req.attachments || [] // Use processed attachments
+//     });
+//     // Map Cloudinary files to attachment object
+//     const attachments = req.files?.map(file => ({
+//       originalname: file.originalname,
+//       filename: file.filename,
+//       path: file.path,           // Cloudinary URL
+//       size: file.size,
+//       mimetype: file.mimetype
+//     })) || [];
+
+ 
+
+//     const populatedTicket = await Ticket.findById(ticket._id)
+//       .populate('user company');
+
+//     // Send email if needed
+//     await sendEmail({
+//       to: populatedTicket.user.email,
+//       subject: `Sakla Tech Ticket Created: ${populatedTicket.ticketNumber}`,
+//       html: ticketCreatedTemplate(populatedTicket)
 //     });
 
 //     res.status(201).json({
 //       status: 'success',
-//       data: {
-//         ticket
-//       }
+//       data: { ticket: populatedTicket }
 //     });
 //   } catch (error) {
 //     next(error);
 //   }
 // };
+const getLeastBusyEmployee = async (companyId) => {
+  // Get all employees of company
+  const employees = await User.find({ role: 'employee' });
 
+  if (!employees.length) return null;
+
+  // Map employees with count of open tickets assigned to them
+  const employeeTicketsCount = await Promise.all(
+    employees.map(async (emp) => {
+      const count = await Ticket.countDocuments({
+        assignedTo: emp._id,
+        status: { $in: ['open', 'pending'] }  // only open/pending tickets
+      });
+      return { employee: emp, count };
+    })
+  );
+
+  // Sort by count ascending and return employee with least tickets
+  employeeTicketsCount.sort((a, b) => a.count - b.count);
+
+  return employeeTicketsCount[0].employee;
+};
 
 export const createTicket = async (req, res, next) => {
   try {
     const { subject, description, priority, category, phone } = req.body;
 
-    const ticket = await Ticket.create({
+    // Get employee with least tickets for assignment
+    const assignedEmployee = await getLeastBusyEmployee(req.user.company);
+
+    const ticketData = {
       subject,
       description,
       priority,
@@ -98,28 +144,35 @@ export const createTicket = async (req, res, next) => {
       phone,
       company: req.user.company,
       user: req.user._id,
-      attachments: req.attachments || [] // Use processed attachments
-    });
-    // Map Cloudinary files to attachment object
-    const attachments = req.files?.map(file => ({
-      originalname: file.originalname,
-      filename: file.filename,
-      path: file.path,           // Cloudinary URL
-      size: file.size,
-      mimetype: file.mimetype
-    })) || [];
+      attachments: req.attachments || []
+    };
 
- 
+    if (assignedEmployee) {
+      ticketData.assignedTo = assignedEmployee._id;
+    }
+
+    const ticket = await Ticket.create(ticketData);
 
     const populatedTicket = await Ticket.findById(ticket._id)
-      .populate('user company');
+      .populate('user company assignedTo');
 
-    // Send email if needed
+    // Send ticket created email to ticket owner
     await sendEmail({
       to: populatedTicket.user.email,
       subject: `Sakla Tech Ticket Created: ${populatedTicket.ticketNumber}`,
       html: ticketCreatedTemplate(populatedTicket)
     });
+
+    // Send assignment email to employee
+    if (assignedEmployee) {
+      await sendEmail({
+        to: assignedEmployee.email,
+        subject: `New Ticket Assigned: ${populatedTicket.ticketNumber}`,
+        html: `<p>Hello ${assignedEmployee.name},</p>
+               <p>A new ticket has been assigned to you. Please check and resolve it ASAP.</p>
+               <p>Ticket Subject: ${ticket.subject}</p>`
+      });
+    }
 
     res.status(201).json({
       status: 'success',
@@ -129,7 +182,6 @@ export const createTicket = async (req, res, next) => {
     next(error);
   }
 };
-
 
 // @desc    Get single ticket
 // @route   GET /api/tickets/:id
