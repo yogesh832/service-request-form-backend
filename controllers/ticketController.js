@@ -134,36 +134,75 @@ export const createTicket = async (req, res, next) => {
 // @desc    Get single ticket
 // @route   GET /api/tickets/:id
 // @access  Private
+// export const getTicket = async (req, res, next) => {
+//   try {
+//     const ticket = await Ticket.findById(req.params.id)
+//       .populate('user assignedTo company');
+
+//     if (!ticket) {
+//       return next(new AppError('No ticket found with that ID', 404));
+//     }
+
+//     // Authorization check
+//     if (req.user.role === 'client' && !ticket.user.equals(req.user._id)) {
+//       return next(new AppError('Not authorized to access this ticket', 403));
+//     }
+
+//     if (req.user.role === 'employee' && 
+//         !ticket.assignedTo.equals(req.user._id) && 
+//         !ticket.company.equals(req.user.company)) {
+//       return next(new AppError('Not authorized to access this ticket', 403));
+//     }
+
+//     res.status(200).json({
+//       status: 'success',
+//       data: {
+//         ticket
+//       }
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 export const getTicket = async (req, res, next) => {
   try {
     const ticket = await Ticket.findById(req.params.id)
-      .populate('user assignedTo company');
+      .populate([
+        { path: 'user', select: 'name email phone profilePhoto' },
+        { path: 'assignedTo', select: 'name email phone profilePhoto' },
+        { path: 'company', select: 'name abbreviation' }
+      ]);
 
     if (!ticket) {
       return next(new AppError('No ticket found with that ID', 404));
     }
 
-    // Authorization check
+    // Authorization check for client
     if (req.user.role === 'client' && !ticket.user.equals(req.user._id)) {
       return next(new AppError('Not authorized to access this ticket', 403));
     }
 
-    if (req.user.role === 'employee' && 
-        !ticket.assignedTo.equals(req.user._id) && 
-        !ticket.company.equals(req.user.company)) {
+    // Authorization check for employee
+    if (
+      req.user.role === 'employee' &&
+      (
+        (!ticket.assignedTo || !ticket.assignedTo._id.equals(req.user._id)) &&
+        !ticket.company.equals(req.user.company)
+      )
+    ) {
       return next(new AppError('Not authorized to access this ticket', 403));
     }
 
     res.status(200).json({
       status: 'success',
-      data: {
-        ticket
-      }
+      data: { ticket }
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 // @desc    Update ticket
 // @route   PATCH /api/tickets/:id

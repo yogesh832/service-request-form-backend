@@ -1,16 +1,9 @@
 import express from 'express';
-import {
-  exportUsersExcel,
-  exportUsersPDF,
-  exportTicketsExcel,
-  exportTicketsPDF
-} from '../controllers/exportController.js';
+import { exportResource ,exportPreview } from '../controllers/exportController.js';
+import { protect, restrictTo } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/users/excel', exportUsersExcel);
-router.get('/users/pdf', exportUsersPDF);
-router.get('/tickets/excel', exportTicketsExcel);
-router.get('/tickets/pdf', exportTicketsPDF);
-
+router.get('/:resource/:format', protect, restrictTo('admin'), exportResource);
+router.get('/export/:resource/json', protect, restrictTo('admin'), exportPreview);
 export default router;
