@@ -22,7 +22,8 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   'http://localhost:5173',
   'https://salka-tech-service-request-form.vercel.app',
-  'https://your-other-vercel-url.vercel.app', // <-- Add more if needed
+  'https://your-other-vercel-url.vercel.app',
+  'https://service-request-jhgh.vercel.app'/ // <-- Add more if needed
 ];
 
 // ✅ CORS Middleware with Dynamic Origin Check
