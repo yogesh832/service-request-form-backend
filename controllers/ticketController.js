@@ -63,80 +63,11 @@ export const getAllTickets = async (req, res, next) => {
 // @access  Private
 
 
-// export const createTicket = async (req, res, next) => {
-//   try {
-//     const { subject, description, priority, category, phone } = req.body;
-
-//     const ticket = await Ticket.create({
-//       subject,
-//       description,
-//       priority,
-//       category,
-//       phone,
-//       company: req.user.company,
-//       user: req.user._id,
-//       attachments: req.attachments || [] // Use processed attachments
-//     });
-//     // Map Cloudinary files to attachment object
-//     const attachments = req.files?.map(file => ({
-//       originalname: file.originalname,
-//       filename: file.filename,
-//       path: file.path,           // Cloudinary URL
-//       size: file.size,
-//       mimetype: file.mimetype
-//     })) || [];
-
- 
-
-//     const populatedTicket = await Ticket.findById(ticket._id)
-//       .populate('user company');
-
-//     // Send email if needed
-//     await sendEmail({
-//       to: populatedTicket.user.email,
-//       subject: `Sakla Tech Ticket Created: ${populatedTicket.ticketNumber}`,
-//       html: ticketCreatedTemplate(populatedTicket)
-//     });
-
-//     res.status(201).json({
-//       status: 'success',
-//       data: { ticket: populatedTicket }
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-const getLeastBusyEmployee = async (companyId) => {
-  // Get all employees of company
-  const employees = await User.find({ role: 'employee' });
-
-  if (!employees.length) return null;
-
-  // Map employees with count of open tickets assigned to them
-  const employeeTicketsCount = await Promise.all(
-    employees.map(async (emp) => {
-      const count = await Ticket.countDocuments({
-        assignedTo: emp._id,
-        status: { $in: ['open', 'pending'] }  // only open/pending tickets
-      });
-      return { employee: emp, count };
-    })
-  );
-
-  // Sort by count ascending and return employee with least tickets
-  employeeTicketsCount.sort((a, b) => a.count - b.count);
-
-  return employeeTicketsCount[0].employee;
-};
-
 export const createTicket = async (req, res, next) => {
   try {
     const { subject, description, priority, category, phone } = req.body;
 
-    // Get employee with least tickets for assignment
-    const assignedEmployee = await getLeastBusyEmployee(req.user.company);
-
-    const ticketData = {
+    const ticket = await Ticket.create({
       subject,
       description,
       priority,
@@ -144,35 +75,28 @@ export const createTicket = async (req, res, next) => {
       phone,
       company: req.user.company,
       user: req.user._id,
-      attachments: req.attachments || []
-    };
+      attachments: req.attachments || [] // Use processed attachments
+    });
+    // Map Cloudinary files to attachment object
+    const attachments = req.files?.map(file => ({
+      originalname: file.originalname,
+      filename: file.filename,
+      path: file.path,           // Cloudinary URL
+      size: file.size,
+      mimetype: file.mimetype
+    })) || [];
 
-    if (assignedEmployee) {
-      ticketData.assignedTo = assignedEmployee._id;
-    }
-
-    const ticket = await Ticket.create(ticketData);
+ 
 
     const populatedTicket = await Ticket.findById(ticket._id)
-      .populate('user company assignedTo');
+      .populate('user company');
 
-    // Send ticket created email to ticket owner
+    // Send email if needed
     await sendEmail({
       to: populatedTicket.user.email,
       subject: `Sakla Tech Ticket Created: ${populatedTicket.ticketNumber}`,
       html: ticketCreatedTemplate(populatedTicket)
     });
-
-    // Send assignment email to employee
-    if (assignedEmployee) {
-      await sendEmail({
-        to: assignedEmployee.email,
-        subject: `New Ticket Assigned: ${populatedTicket.ticketNumber}`,
-        html: `<p>Hello ${assignedEmployee.name},</p>
-               <p>A new ticket has been assigned to you. Please check and resolve it ASAP.</p>
-               <p>Ticket Subject: ${ticket.subject}</p>`
-      });
-    }
 
     res.status(201).json({
       status: 'success',
@@ -182,6 +106,82 @@ export const createTicket = async (req, res, next) => {
     next(error);
   }
 };
+// const getLeastBusyEmployee = async (companyId) => {
+//   // Get all employees of company
+//   const employees = await User.find({ role: 'employee' });
+
+//   if (!employees.length) return null;
+
+//   // Map employees with count of open tickets assigned to them
+//   const employeeTicketsCount = await Promise.all(
+//     employees.map(async (emp) => {
+//       const count = await Ticket.countDocuments({
+//         assignedTo: emp._id,
+//         status: { $in: ['open', 'pending'] }  // only open/pending tickets
+//       });
+//       return { employee: emp, count };
+//     })
+//   );
+
+//   // Sort by count ascending and return employee with least tickets
+//   employeeTicketsCount.sort((a, b) => a.count - b.count);
+
+//   return employeeTicketsCount[0].employee;
+// };
+
+// export const createTicket = async (req, res, next) => {
+//   try {
+//     const { subject, description, priority, category, phone } = req.body;
+
+//     // Get employee with least tickets for assignment
+//     const assignedEmployee = await getLeastBusyEmployee(req.user.company);
+
+//     const ticketData = {
+//       subject,
+//       description,
+//       priority,
+//       category,
+//       phone,
+//       company: req.user.company,
+//       user: req.user._id,
+//       attachments: req.attachments || []
+//     };
+
+//     if (assignedEmployee) {
+//       ticketData.assignedTo = assignedEmployee._id;
+//     }
+
+//     const ticket = await Ticket.create(ticketData);
+
+//     const populatedTicket = await Ticket.findById(ticket._id)
+//       .populate('user company assignedTo');
+
+//     // Send ticket created email to ticket owner
+//     await sendEmail({
+//       to: populatedTicket.user.email,
+//       subject: `Sakla Tech Ticket Created: ${populatedTicket.ticketNumber}`,
+//       html: ticketCreatedTemplate(populatedTicket)
+//     });
+
+//     // Send assignment email to employee
+//     if (assignedEmployee) {
+//       await sendEmail({
+//         to: assignedEmployee.email,
+//         subject: `New Ticket Assigned: ${populatedTicket.ticketNumber}`,
+//         html: `<p>Hello ${assignedEmployee.name},</p>
+//                <p>A new ticket has been assigned to you. Please check and resolve it ASAP.</p>
+//                <p>Ticket Subject: ${ticket.subject}</p>`
+//       });
+//     }
+
+//     res.status(201).json({
+//       status: 'success',
+//       data: { ticket: populatedTicket }
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 // @desc    Get single ticket
 // @route   GET /api/tickets/:id
@@ -327,7 +327,15 @@ export const assignTicket = async (req, res, next) => {
     if (!ticket) {
       return next(new AppError('No ticket found with that ID', 404));
     }
-
+      if (assignedTo && ticket.assignedTo) {
+      await sendEmail({
+        to: ticket.assignedTo.email,
+        subject: `New Ticket Assigned: ${ticket.ticketNumber}`,
+        html: `<p>Hello ${ticket.assignedTo.name},</p>
+               <p>A new ticket has been assigned to you. Please check and resolve it ASAP.</p>
+               <p>Ticket Subject: ${ticket.subject}</p>`
+      });
+    }
     res.status(200).json({
       status: 'success',
       data: {
