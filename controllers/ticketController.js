@@ -65,8 +65,10 @@ export const getAllTickets = async (req, res, next) => {
 
 export const createTicket = async (req, res, next) => {
   try {
-    const { subject, description, priority, category, phone } = req.body;
-
+    const { subject, description, priority, category, phone ,origin} = req.body;
+if (!origin) {
+  return res.status(400).json({ status: 'error', message: 'Origin is required' });
+}
     const ticket = await Ticket.create({
       subject,
       description,
@@ -92,11 +94,12 @@ export const createTicket = async (req, res, next) => {
       .populate('user company');
 
     // Send email if needed
-    await sendEmail({
-      to: populatedTicket.user.email,
-      subject: `Sakla Tech Ticket Created: ${populatedTicket.ticketNumber}`,
-      html: ticketCreatedTemplate(populatedTicket)
-    });
+   await sendEmail({
+  to: populatedTicket.user.email,
+  subject: `Sakla Tech Ticket Created: ${populatedTicket.ticketNumber}`,
+  html: ticketCreatedTemplate(populatedTicket, origin) // ✅ pass origin
+});
+
 
     res.status(201).json({
       status: 'success',
@@ -347,13 +350,48 @@ export const assignTicket = async (req, res, next) => {
   }
 };
 
-// Add status update controller
+// // Add status update controller
+// export const updateTicketStatus = async (req, res, next) => {
+//   try {
+//     const { status } = req.body;
+//     const ticket = await Ticket.findByIdAndUpdate(
+//       req.params.id,
+//       { status },
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!ticket) {
+//       return next(new AppError('No ticket found with that ID', 404));
+//     }
+
+//     res.status(200).json({
+//       status: 'success',
+//       data: {
+//         ticket
+//       }
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+// Update the updateTicketStatus function
 export const updateTicketStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
+    const update = { status };
+    
+    // Set resolvedAt timestamp when status changes to resolved
+    if (status === 'resolved') {
+      update.resolvedAt = new Date();
+      
+      // Track resolution event for analytics
+      // You'll need to implement your analytics tracking system here
+      // Example: analytics.track('ticket_resolved', { ticketId: req.params.id });
+    }
+    
     const ticket = await Ticket.findByIdAndUpdate(
       req.params.id,
-      { status },
+      update,
       { new: true, runValidators: true }
     );
 

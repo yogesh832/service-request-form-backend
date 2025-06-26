@@ -132,7 +132,7 @@ export const passwordResetEmail = ({ name, resetURL }) => `
 
 
 
-export const ticketCreatedTemplate = (ticket) => {
+export const ticketCreatedTemplate = (ticket, origin)=> {
   return `
     <!DOCTYPE html>
     <html>
@@ -204,10 +204,16 @@ export const ticketCreatedTemplate = (ticket) => {
               : ''
           }
         </table>
+        <p style="margin-top: 20px;">
+  You can view your ticket here: 
+  <a href="${origin}/tickets/${ticket._id}" target="_blank" style="color:#4b0082;">View Ticket</a>
+</p>
+
 
         <p style="margin-top: 20px;">Our team will review your request and respond shortly.</p>
 
         <hr />
+
 
         <div class="footer">
           This is an automated email from <strong>SALKA TECH</strong>. Please do not reply to this message.

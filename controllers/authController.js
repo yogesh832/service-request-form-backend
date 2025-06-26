@@ -65,22 +65,52 @@ export const login = async (req, res) => {
   }
 };
 
+// export const forgotPassword = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+
+//     if (!email) {
+//       return res.status(400).json({ status: 'error', message: 'Email is required' });
+//     }
+
+//     const { user, resetToken } = await authService.forgotPasswordUser(email);
+
+//     const resetURL = `https://service-request-jhgh.vercel.app/reset-password/${resetToken}`;
+
+//     await sendEmail({
+//       to: user.email,
+//       subject: 'Password Reset',
+//       html: passwordResetEmail({ name: user.name, resetURL })
+//     });
+
+//     res.status(200).json({ status: 'success', message: 'Password reset link sent to your email' });
+//   } catch (error) {
+//     const message = error.message === 'User not found'
+//       ? 'No account found with this email'
+//       : error.message || 'Something went wrong';
+//     res.status(404).json({ status: 'error', message });
+//   }
+// };
 export const forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, origin } = req.body;
 
     if (!email) {
       return res.status(400).json({ status: 'error', message: 'Email is required' });
     }
 
+    if (!origin) {
+      return res.status(400).json({ status: 'error', message: 'Origin is required' });
+    }
+
     const { user, resetToken } = await authService.forgotPasswordUser(email);
 
-    const resetURL = `https://localhost:5173/reset-password/${resetToken}`;
+    const resetURL = `${origin}/reset-password/${resetToken}`; // ✅ dynamic reset URL
 
     await sendEmail({
       to: user.email,
       subject: 'Password Reset',
-      html: passwordResetEmail({ name: user.name, resetURL })
+      html: passwordResetEmail({ name: user.name, resetURL }),
     });
 
     res.status(200).json({ status: 'success', message: 'Password reset link sent to your email' });
