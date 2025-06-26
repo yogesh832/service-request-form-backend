@@ -34,7 +34,7 @@ export const register = async (req, res) => {
     
     await sendEmail({
       to: user.email,
-      subject: `Welcome to Sakla Tech, ${user.name}`,
+      subject: `Welcome to SalkaTech, ${user.name}`,
       html: welcomeEmail(user.name)
     });
 

@@ -39,7 +39,7 @@ export const welcomeEmail = ({ name }) => `
   </head>
   <body>
     <div class="container">
-      <div class="header">🌟 Welcome to SALKA TECH!</div>
+      <div class="header">🌟 Welcome to SALKATECH!</div>
       <div class="content">
         <p>Hi ${name},</p>
         <p>We're thrilled to have you onboard. Your journey with <strong>SALKA TECH</strong> starts now!</p>
@@ -120,7 +120,7 @@ export const passwordResetEmail = ({ name, resetURL }) => `
         <p>This link will expire in 10 minutes.</p>
       </div>
       <div class="footer">
-        © ${new Date().getFullYear()} SALKA TECH. All rights reserved.
+        © ${new Date().getFullYear()} SALKATECH. All rights reserved.
       </div>
     </div>
   </body>
@@ -187,7 +187,7 @@ export const ticketCreatedTemplate = (ticket, origin)=> {
         <h2>🎫 Ticket Created - ${ticket.ticketNumber}</h2>
 
         <p>Hello <strong>${ticket.user.name}</strong>,</p>
-        <p>Thank you for contacting <strong>SALKA TECH</strong> support. Your ticket has been successfully created. Here are the details:</p>
+        <p>Thank you for contacting <strong>SALKATECH</strong> support. Your ticket has been successfully created. Here are the details:</p>
 
         <table>
           <tr><td><strong>Ticket Number</strong></td><td>${ticket.ticketNumber}</td></tr>
@@ -216,7 +216,7 @@ export const ticketCreatedTemplate = (ticket, origin)=> {
 
 
         <div class="footer">
-          This is an automated email from <strong>SALKA TECH</strong>. Please do not reply to this message.
+          This is an automated email from <strong>SALKATECH</strong>. Please do not reply to this message.
         </div>
       </div>
     </body>
@@ -238,7 +238,7 @@ export const ticketReminderTemplate = (employeeName, tickets) => {
         ${ticketListHtml}
       </ul>
       <p>Thank you for your attention to these tickets.</p>
-      <p>Best regards,<br/>Sakla Tech Support Team</p>
+      <p>Best regards,<br/>SalkaTech Support Team</p>
     </div>
   `;
 };

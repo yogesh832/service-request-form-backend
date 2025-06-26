@@ -96,7 +96,7 @@ if (!origin) {
     // Send email if needed
    await sendEmail({
   to: populatedTicket.user.email,
-  subject: `Sakla Tech Ticket Created: ${populatedTicket.ticketNumber}`,
+  subject: `SalkaTech Ticket Created: ${populatedTicket.ticketNumber}`,
   html: ticketCreatedTemplate(populatedTicket, origin) // ✅ pass origin
 });
 
