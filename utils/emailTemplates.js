@@ -125,7 +125,12 @@ export const passwordResetEmail = ({ name, resetURL }) => `
   </html>
 `;
 
-export const ticketCreatedTemplate = (ticket) => {
+
+
+
+
+
+export const ticketCreatedTemplate = (ticket, origin)=> {
   return `
     <!DOCTYPE html>
     <html>
@@ -205,10 +210,16 @@ export const ticketCreatedTemplate = (ticket) => {
               : ""
           }
         </table>
+        <p style="margin-top: 20px;">
+  You can view your ticket here: 
+  <a href="${origin}/tickets/${ticket._id}" target="_blank" style="color:#4b0082;">View Ticket</a>
+</p>
+
 
         <p style="margin-top: 20px;">Our team will review your request and respond shortly.</p>
 
         <hr />
+
 
         <div class="footer">
           This is an automated email from <strong>SALKATECH</strong>. Please do not reply to this message.
@@ -235,7 +246,11 @@ export const ticketReminderTemplate = (employeeName, tickets) => {
         ${ticketListHtml}
       </ul>
       <p>Thank you for your attention to these tickets.</p>
+<<<<<<< HEAD
       <p>Best regards,<br/>SALKATech Support Team</p>
+=======
+      <p>Best regards,<br/>SalkaTech Support Team</p>
+>>>>>>> 6fb949ee58e738c7f1cc04b19d48629f2f01afe9
     </div>
   `;
 };
