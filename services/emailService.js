@@ -6,8 +6,6 @@ import {
   ticketCreatedTemplate,
 } from "../utils/emailTemplates.js";
 
-
-
 // // Ethereal testing SMTP setup
 // let testAccount = await nodemailer.createTestAccount(); // 👈 creates test credentials
 
@@ -22,7 +20,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendEmail = async ({ to, subject, html }) => {
   const mailOptions = {
-    from: `Sakla Tech <${"contact.salkatech@gmail.com"}>`,
+    from: `SALKATech <${"contact.salkatech@gmail.com"}>`,
     to,
     subject,
     html,

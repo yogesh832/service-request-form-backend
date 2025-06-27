@@ -42,19 +42,17 @@ export const welcomeEmail = ({ name }) => `
       <div class="header">🌟 Welcome to SALKATECH!</div>
       <div class="content">
         <p>Hi ${name},</p>
-        <p>We're thrilled to have you onboard. Your journey with <strong>SALKA TECH</strong> starts now!</p>
+        <p>We're thrilled to have you onboard. Your journey with <strong>SALKATECH</strong> starts now!</p>
         <p>Log in to explore the dashboard and manage your support tickets efficiently.</p>
         <p>If you have any questions, our support team is always here to help.</p>
       </div>
       <div class="footer">
-        © ${new Date().getFullYear()} SALKA TECH. All rights reserved.
+        © ${new Date().getFullYear()} SALKATECH. All rights reserved.
       </div>
     </div>
   </body>
   </html>
 `;
-
-
 
 export const passwordResetEmail = ({ name, resetURL }) => `
   <!DOCTYPE html>
@@ -190,18 +188,26 @@ export const ticketCreatedTemplate = (ticket, origin)=> {
         <p>Thank you for contacting <strong>SALKATECH</strong> support. Your ticket has been successfully created. Here are the details:</p>
 
         <table>
-          <tr><td><strong>Ticket Number</strong></td><td>${ticket.ticketNumber}</td></tr>
+          <tr><td><strong>Ticket Number</strong></td><td>${
+            ticket.ticketNumber
+          }</td></tr>
           <tr><td><strong>Subject</strong></td><td>${ticket.subject}</td></tr>
-          <tr><td><strong>Description</strong></td><td>${ticket.description}</td></tr>
+          <tr><td><strong>Description</strong></td><td>${
+            ticket.description
+          }</td></tr>
           <tr><td><strong>Category</strong></td><td>${ticket.category}</td></tr>
           <tr><td><strong>Priority</strong></td><td>${ticket.priority}</td></tr>
           <tr><td><strong>Status</strong></td><td>${ticket.status}</td></tr>
           <tr><td><strong>Phone</strong></td><td>${ticket.phone}</td></tr>
-          <tr><td><strong>Created At</strong></td><td>${new Date(ticket.createdAt).toLocaleString()}</td></tr>
+          <tr><td><strong>Created At</strong></td><td>${new Date(
+            ticket.createdAt
+          ).toLocaleString()}</td></tr>
           ${
             ticket.attachments?.length
-              ? `<tr><td><strong>Attachments</strong></td><td>${ticket.attachments.map(att => att.originalname).join(', ')}</td></tr>`
-              : ''
+              ? `<tr><td><strong>Attachments</strong></td><td>${ticket.attachments
+                  .map((att) => att.originalname)
+                  .join(", ")}</td></tr>`
+              : ""
           }
         </table>
         <p style="margin-top: 20px;">
@@ -224,11 +230,13 @@ export const ticketCreatedTemplate = (ticket, origin)=> {
   `;
 };
 
-
 export const ticketReminderTemplate = (employeeName, tickets) => {
-  const ticketListHtml = tickets.map(ticket =>
-    `<li><strong>${ticket.ticketNumber}</strong>: ${ticket.subject} (Status: ${ticket.status})</li>`
-  ).join('');
+  const ticketListHtml = tickets
+    .map(
+      (ticket) =>
+        `<li><strong>${ticket.ticketNumber}</strong>: ${ticket.subject} (Status: ${ticket.status})</li>`
+    )
+    .join("");
 
   return `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -238,7 +246,11 @@ export const ticketReminderTemplate = (employeeName, tickets) => {
         ${ticketListHtml}
       </ul>
       <p>Thank you for your attention to these tickets.</p>
+<<<<<<< HEAD
+      <p>Best regards,<br/>SALKATech Support Team</p>
+=======
       <p>Best regards,<br/>SalkaTech Support Team</p>
+>>>>>>> 6fb949ee58e738c7f1cc04b19d48629f2f01afe9
     </div>
   `;
 };
