@@ -39,22 +39,20 @@ export const welcomeEmail = ({ name }) => `
   </head>
   <body>
     <div class="container">
-      <div class="header">🌟 Welcome to SALKA TECH!</div>
+      <div class="header">🌟 Welcome to SALKATECH!</div>
       <div class="content">
         <p>Hi ${name},</p>
-        <p>We're thrilled to have you onboard. Your journey with <strong>SALKA TECH</strong> starts now!</p>
+        <p>We're thrilled to have you onboard. Your journey with <strong>SALKATECH</strong> starts now!</p>
         <p>Log in to explore the dashboard and manage your support tickets efficiently.</p>
         <p>If you have any questions, our support team is always here to help.</p>
       </div>
       <div class="footer">
-        © ${new Date().getFullYear()} SALKA TECH. All rights reserved.
+        © ${new Date().getFullYear()} SALKATECH. All rights reserved.
       </div>
     </div>
   </body>
   </html>
 `;
-
-
 
 export const passwordResetEmail = ({ name, resetURL }) => `
   <!DOCTYPE html>
@@ -120,17 +118,12 @@ export const passwordResetEmail = ({ name, resetURL }) => `
         <p>This link will expire in 10 minutes.</p>
       </div>
       <div class="footer">
-        © ${new Date().getFullYear()} SALKA TECH. All rights reserved.
+        © ${new Date().getFullYear()} SALKATECH. All rights reserved.
       </div>
     </div>
   </body>
   </html>
 `;
-
-
-
-
-
 
 export const ticketCreatedTemplate = (ticket) => {
   return `
@@ -187,21 +180,29 @@ export const ticketCreatedTemplate = (ticket) => {
         <h2>🎫 Ticket Created - ${ticket.ticketNumber}</h2>
 
         <p>Hello <strong>${ticket.user.name}</strong>,</p>
-        <p>Thank you for contacting <strong>SALKA TECH</strong> support. Your ticket has been successfully created. Here are the details:</p>
+        <p>Thank you for contacting <strong>SALKATECH</strong> support. Your ticket has been successfully created. Here are the details:</p>
 
         <table>
-          <tr><td><strong>Ticket Number</strong></td><td>${ticket.ticketNumber}</td></tr>
+          <tr><td><strong>Ticket Number</strong></td><td>${
+            ticket.ticketNumber
+          }</td></tr>
           <tr><td><strong>Subject</strong></td><td>${ticket.subject}</td></tr>
-          <tr><td><strong>Description</strong></td><td>${ticket.description}</td></tr>
+          <tr><td><strong>Description</strong></td><td>${
+            ticket.description
+          }</td></tr>
           <tr><td><strong>Category</strong></td><td>${ticket.category}</td></tr>
           <tr><td><strong>Priority</strong></td><td>${ticket.priority}</td></tr>
           <tr><td><strong>Status</strong></td><td>${ticket.status}</td></tr>
           <tr><td><strong>Phone</strong></td><td>${ticket.phone}</td></tr>
-          <tr><td><strong>Created At</strong></td><td>${new Date(ticket.createdAt).toLocaleString()}</td></tr>
+          <tr><td><strong>Created At</strong></td><td>${new Date(
+            ticket.createdAt
+          ).toLocaleString()}</td></tr>
           ${
             ticket.attachments?.length
-              ? `<tr><td><strong>Attachments</strong></td><td>${ticket.attachments.map(att => att.originalname).join(', ')}</td></tr>`
-              : ''
+              ? `<tr><td><strong>Attachments</strong></td><td>${ticket.attachments
+                  .map((att) => att.originalname)
+                  .join(", ")}</td></tr>`
+              : ""
           }
         </table>
 
@@ -210,7 +211,7 @@ export const ticketCreatedTemplate = (ticket) => {
         <hr />
 
         <div class="footer">
-          This is an automated email from <strong>SALKA TECH</strong>. Please do not reply to this message.
+          This is an automated email from <strong>SALKATECH</strong>. Please do not reply to this message.
         </div>
       </div>
     </body>
@@ -218,11 +219,13 @@ export const ticketCreatedTemplate = (ticket) => {
   `;
 };
 
-
 export const ticketReminderTemplate = (employeeName, tickets) => {
-  const ticketListHtml = tickets.map(ticket =>
-    `<li><strong>${ticket.ticketNumber}</strong>: ${ticket.subject} (Status: ${ticket.status})</li>`
-  ).join('');
+  const ticketListHtml = tickets
+    .map(
+      (ticket) =>
+        `<li><strong>${ticket.ticketNumber}</strong>: ${ticket.subject} (Status: ${ticket.status})</li>`
+    )
+    .join("");
 
   return `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -232,7 +235,7 @@ export const ticketReminderTemplate = (employeeName, tickets) => {
         ${ticketListHtml}
       </ul>
       <p>Thank you for your attention to these tickets.</p>
-      <p>Best regards,<br/>Sakla Tech Support Team</p>
+      <p>Best regards,<br/>SALKATech Support Team</p>
     </div>
   `;
 };
