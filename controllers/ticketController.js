@@ -66,9 +66,7 @@ export const getAllTickets = async (req, res, next) => {
 export const createTicket = async (req, res, next) => {
   try {
     const { subject, description, priority, category, phone ,origin} = req.body;
-if (!origin) {
-  return res.status(400).json({ status: 'error', message: 'Origin is required' });
-}
+
     const ticket = await Ticket.create({
       subject,
       description,
@@ -79,6 +77,19 @@ if (!origin) {
       user: req.user._id,
       attachments: req.attachments || [] // Use processed attachments
     });
+    if(!req.user.company){
+      return res.status(400).json({status:'error',
+        message:'company not found'
+      })
+    }
+
+      if (!ticket) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to create ticket'
+      });
+    }
+
     // Map Cloudinary files to attachment object
     const attachments = req.files?.map(file => ({
       originalname: file.originalname,
@@ -105,8 +116,13 @@ if (!origin) {
       status: 'success',
       data: { ticket: populatedTicket }
     });
-  } catch (error) {
-    next(error);
+  }  catch (error) {
+    // Custom error message if save fails
+    const message = error.message || 'Failed to create ticket';
+    res.status(500).json({
+      status: 'error',
+      message
+    });
   }
 };
 // const getLeastBusyEmployee = async (companyId) => {
