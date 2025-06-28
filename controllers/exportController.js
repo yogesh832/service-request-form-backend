@@ -278,7 +278,9 @@ const getModel = (resource) => {
 };
 
 const exportExcel = async (res, resource, data) => {
-  if (!data.length) throw new Error('No data to export');
+if (!data.length) {
+  return res.status(404).json({ message: 'No data found for export in the given date range' });
+}
 
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet(`${resource.toUpperCase()} Report`);
@@ -311,7 +313,10 @@ const exportExcel = async (res, resource, data) => {
 };
 
 const exportPdf = (res, resource, data) => {
-  if (!data.length) throw new Error('No data to export');
+if (!data.length) {
+  return res.status(404).json({ message: 'No data found for export in the given date range' });
+}
+
 
   const doc = new PDFDocument({ margin: 30, size: 'A4' });
   res.setHeader('Content-Type', 'application/pdf');
