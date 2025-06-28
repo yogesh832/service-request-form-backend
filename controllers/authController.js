@@ -23,6 +23,7 @@ const sendAuthToken = (user, statusCode, res, message) => {
         email: user.email,
         role: user.role,
         profilePhoto: user.profilePhoto || null,
+        createdAt:user.createdAt,
       },
     },
   });
@@ -111,7 +112,7 @@ export const forgotPassword = async (req, res) => {
 
     const { user, resetToken } = await authService.forgotPasswordUser(email);
 
-    const resetURL = `${origin}/reset-password/${resetToken}`; // ✅ dynamic reset URL
+    const resetURL = `${origin || "https://salka-tech-service-request-form.vercel.app"}/reset-password/${resetToken}`; // ✅ dynamic reset URL
 
     await sendEmail({
       to: user.email,
