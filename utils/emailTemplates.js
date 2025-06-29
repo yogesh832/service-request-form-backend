@@ -212,7 +212,7 @@ export const ticketCreatedTemplate = (ticket, origin)=> {
         </table>
         <p style="margin-top: 20px;">
   You can view your ticket here: 
-  <a href="${origin}/tickets/${ticket._id}" target="_blank" style="color:#4b0082;">View Ticket</a>
+  <a href="https://salka-tech-service-request-form.vercel.app/tickets/${ticket._id}" target="_blank" style="color:#4b0082;">View Ticket</a>
 </p>
 
 
