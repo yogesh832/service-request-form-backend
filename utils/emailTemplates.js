@@ -246,11 +246,8 @@ export const ticketReminderTemplate = (employeeName, tickets) => {
         ${ticketListHtml}
       </ul>
       <p>Thank you for your attention to these tickets.</p>
-<<<<<<< HEAD
-      <p>Best regards,<br/>SALKATech Support Team</p>
-=======
-      <p>Best regards,<br/>SalkaTech Support Team</p>
->>>>>>> 6fb949ee58e738c7f1cc04b19d48629f2f01afe9
+      <p>Best regards,<br/>SALKATECH Support Team</p>
+      <p>Best regards,<br/>SALKATECH Support Team</p>
     </div>
   `;
 };
