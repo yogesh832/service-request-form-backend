@@ -6,6 +6,7 @@ import { sendEmail } from "../services/emailService.js";
 import {
   ticketCreatedTemplate,
   ticketReminderTemplate,
+  ticketResolvedTemplate
 } from "../utils/emailTemplates.js";
 import User from "../models/User.js";
 
@@ -386,28 +387,73 @@ export const assignTicket = async (req, res, next) => {
 //   }
 // };
 // Update the updateTicketStatus function
+// export const updateTicketStatus = async (req, res, next) => {
+//   try {
+//     const { status } = req.body;
+//     const update = { status };
+    
+//     // Set resolvedAt timestamp when status changes to resolved
+//     if (status === 'resolved') {
+//       update.resolvedAt = new Date();
+      
+//       // Track resolution event for analytics
+//       // You'll need to implement your analytics tracking system here
+//       // Example: analytics.track('ticket_resolved', { ticketId: req.params.id });
+//     }
+    
+//     const ticket = await Ticket.findByIdAndUpdate(
+//       req.params.id,
+//       update,
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!ticket) {
+//       return next(new AppError("No ticket found with that ID", 404));
+//     }
+
+//     res.status(200).json({
+//       status: "success",
+//       data: {
+//         ticket,
+//       },
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 export const updateTicketStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
     const update = { status };
-    
-    // Set resolvedAt timestamp when status changes to resolved
+
+    // ✔️ Agar ticket resolved ho rahi hai to resolvedAt set karo
     if (status === 'resolved') {
       update.resolvedAt = new Date();
-      
-      // Track resolution event for analytics
-      // You'll need to implement your analytics tracking system here
-      // Example: analytics.track('ticket_resolved', { ticketId: req.params.id });
     }
-    
+
+    // ✔️ Update + user ko populate karo (jise ticket bheji gayi thi)
     const ticket = await Ticket.findByIdAndUpdate(
       req.params.id,
       update,
       { new: true, runValidators: true }
-    );
+    ).populate('user'); // 👈 Important for email sending
 
     if (!ticket) {
       return next(new AppError("No ticket found with that ID", 404));
+    }
+
+    // ✔️ Send resolved email only if status === resolved
+    if (status === 'resolved' && ticket.user?.email) {
+      await sendEmail({
+        to: ticket.user.email,
+        subject: `✅ Your ticket "${ticket.subject}" has been resolved`,
+        html: ticketResolvedTemplate({
+          name: ticket.user.name,
+          ticketNumber: ticket.ticketNumber,
+          subject: ticket.subject,
+          resolvedAt: ticket.resolvedAt,
+        }),
+      });
     }
 
     res.status(200).json({
@@ -416,6 +462,7 @@ export const updateTicketStatus = async (req, res, next) => {
         ticket,
       },
     });
+
   } catch (error) {
     next(error);
   }

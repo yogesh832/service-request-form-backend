@@ -279,3 +279,22 @@ export const ticketReminderTemplate = (employeeName, tickets) => {
     </div>
   `;
 };
+
+
+export const ticketResolvedTemplate = ({ name, ticketNumber, subject, resolvedAt }) => `
+  <div style="font-family: Arial, sans-serif; padding: 20px;">
+    <h2 style="color: green;">🎉 Your Ticket Has Been Resolved!</h2>
+    <p>Hi ${name},</p>
+    <p>We are happy to inform you that your ticket has been marked as <strong>Resolved</strong>.</p>
+
+    <ul style="background: #f4f4f4; padding: 10px; border-radius: 6px;">
+      <li><strong>Ticket Number:</strong> ${ticketNumber}</li>
+      <li><strong>Subject:</strong> ${subject}</li>
+      <li><strong>Resolved At:</strong> ${new Date(resolvedAt).toLocaleString()}</li>
+    </ul>
+
+    <p>If you believe the issue is not completely resolved, feel free to reopen the ticket or reply to this mail.</p>
+
+    <p>Thanks,<br/>SALKATECH Support Team</p>
+  </div>
+`;
