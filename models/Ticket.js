@@ -18,6 +18,7 @@ const ticketSchema = new mongoose.Schema({
   },
   phone:{
     type:String,
+    required:true
   
   },
   status: {
