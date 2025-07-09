@@ -1,20 +1,18 @@
 import cron from 'node-cron';
 import Ticket from '../models/Ticket.js';
 import { sendEmail } from '../services/emailService.js';
-import { ticketReminderTemplate } from '../utils/emailTemplates.js';
 
-// Run every 2 hours
-cron.schedule('0 */2 * * *', async () => {
-  console.log('Running reminder job every 2 hours');
+let currentLevel = 1; // Start with level 1
+
+const sendReminderEmails = async (levelLabel) => {
+  console.log(`⏰ Running Level ${levelLabel} reminder job`);
 
   try {
-    // Find all tickets that are open or pending and assigned
     const tickets = await Ticket.find({
       status: { $in: ['open', 'pending'] },
       assignedTo: { $ne: null }
     }).populate('assignedTo');
 
-    // Group tickets by assigned employee
     const ticketsByEmployee = {};
 
     tickets.forEach(ticket => {
@@ -23,7 +21,6 @@ cron.schedule('0 */2 * * *', async () => {
       ticketsByEmployee[empId].push(ticket);
     });
 
-    // Send reminder email to each employee
     for (const empId in ticketsByEmployee) {
       const empTickets = ticketsByEmployee[empId];
       const employeeEmail = empTickets[0].assignedTo.email;
@@ -33,14 +30,24 @@ cron.schedule('0 */2 * * *', async () => {
 
       await sendEmail({
         to: employeeEmail,
-        subject: `Reminder: You have ${empTickets.length} pending tickets`,
+        subject: `Level ${levelLabel} Reminder: You have ${empTickets.length} pending tickets`,
         html: `<p>Hello ${employeeName},</p>
-               <p>This is a reminder that you have the following pending tickets:</p>
+               <p><strong>Level ${levelLabel}</strong> Reminder:</p>
+               <p>You have the following pending tickets:</p>
                <ul>${ticketListHtml}</ul>
                <p>Please resolve them as soon as possible.</p>`
       });
     }
+
   } catch (error) {
-    console.error('Error in reminder job:', error);
+    console.error(`❌ Error in Level ${levelLabel} reminder job:`, error);
   }
+};
+
+// 🔄 Har 6 ghante baad chalega, level rotate karega
+cron.schedule('0 */6 * * *', () => {
+  sendReminderEmails(currentLevel);
+
+  // Rotate: 1 → 2 → 3 → 1 ...
+  currentLevel = currentLevel === 3 ? 1 : currentLevel + 1;
 });

@@ -126,8 +126,8 @@ export const getMe = async (req, res, next) => {
 // ... existing imports ...
 export const updateMe = async (req, res, next) => {
   try {
-    console.log('Request body:', req.body.name); // Log the body
-    console.log('Request file:', req.file); // Log the file
+    // console.log('Request body:', req.body.name); // Log the body
+    // console.log('Request file:', req.file); // Log the file
 
     const filteredBody = {};
     if (req.body.name) filteredBody.name = req.body.name;

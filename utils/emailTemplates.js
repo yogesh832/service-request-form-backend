@@ -1,4 +1,4 @@
-export const welcomeEmail = ({ name }) => `
+export const welcomeEmail = ({ name, email, password }) => `
   <!DOCTYPE html>
   <html>
   <head>
@@ -29,6 +29,23 @@ export const welcomeEmail = ({ name }) => `
         font-size: 16px;
         line-height: 1.8;
       }
+      .info-box {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border-radius: 8px;
+        font-family: monospace;
+      }
+      a.reset-link {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 8px 15px;
+        background-color: #4b0082;
+        color: white !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+      }
       .footer {
         margin-top: 30px;
         text-align: center;
@@ -42,9 +59,17 @@ export const welcomeEmail = ({ name }) => `
       <div class="header">🌟 Welcome to SALKATECH!</div>
       <div class="content">
         <p>Hi ${name},</p>
-        <p>We're thrilled to have you onboard. Your journey with <strong>SALKATECH</strong> starts now!</p>
-        <p>Log in to explore the dashboard and manage your support tickets efficiently.</p>
-        <p>If you have any questions, our support team is always here to help.</p>
+        <p>We're excited to welcome you to <strong>SALKATECH</strong>!</p>
+        <p><strong>Your login details:</strong></p>
+
+        <div class="info-box">
+          <div><strong>Email:</strong> ${email}</div>
+          <div><strong>Password:</strong> ${password}</div>
+        </div>
+
+        <p>You can change your password anytime after logging in.</p>
+        <a href="https://salka-tech-service-request-form.vercel.app/forgot-password" class="reset-link">Reset Your Password</a>
+
       </div>
       <div class="footer">
         © ${new Date().getFullYear()} SALKATECH. All rights reserved.
@@ -53,6 +78,9 @@ export const welcomeEmail = ({ name }) => `
   </body>
   </html>
 `;
+
+
+
 
 export const passwordResetEmail = ({ name, resetURL }) => `
   <!DOCTYPE html>

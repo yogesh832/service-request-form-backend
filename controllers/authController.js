@@ -29,25 +29,53 @@ const sendAuthToken = (user, statusCode, res, message) => {
   });
 };
 
+// export const register = async (req, res) => {
+//   try {
+//     const user = await authService.registerUser(req.body);
+
+//     await sendEmail({
+//       to: user.email,
+//       subject: `Welcome to SalkaTech, ${user.name}`,
+//       html: welcomeEmail(user.name)
+//     });
+
+//     sendAuthToken(user, 201, res, "User registered successfully");
+//   } catch (error) {
+//     const message =
+//       error.code === 11000 || error.message.includes("duplicate")
+//         ? "User already exists with this email"
+//         : error.message || "Registration failed";
+//     res.status(400).json({ status: "error", message });
+//   }
+// };
 export const register = async (req, res) => {
   try {
+    const { name, email, password } = req.body; // Extract directly
+
+    console.log("📥 Request body:", req.body);
+
     const user = await authService.registerUser(req.body);
+console.log(name, email, password);
+    console.log("✅ Registered user:", user); // confirm name, email
 
     await sendEmail({
-      to: user.email,
-      subject: `Welcome to SalkaTech, ${user.name}`,
-      html: welcomeEmail(user.name)
+      to: email,
+      subject: `Welcome to SalkaTech, ${name}`,
+      html: welcomeEmail({ name, email, password }) // ← all directly passed
     });
 
     sendAuthToken(user, 201, res, "User registered successfully");
+
   } catch (error) {
     const message =
       error.code === 11000 || error.message.includes("duplicate")
         ? "User already exists with this email"
         : error.message || "Registration failed";
+
     res.status(400).json({ status: "error", message });
   }
 };
+
 
 export const login = async (req, res) => {
   try {
