@@ -119,7 +119,7 @@ const sendReminderEmails = async (levelLabel) => {
 };
 
 // 🔁 Cron job runs every 6 hours and rotates the level
-cron.schedule('0 */6 * * *', () => {
+cron.schedule('*/5 * * * *', () => {
   sendReminderEmails(currentLevel);
   currentLevel = currentLevel === 3 ? 1 : currentLevel + 1;
 });
