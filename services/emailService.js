@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendEmail = async ({ to, subject, html }) => {
   const mailOptions = {
-    from: `SALKATe <${"contact.salkatech@gmail.com"}>`,
+    from: `SALKATECH <${"contact.salkatech@gmail.com"}>`,
     to,
     subject,
     html,
