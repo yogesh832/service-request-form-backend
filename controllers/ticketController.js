@@ -65,9 +65,78 @@ export const getAllTickets = async (req, res, next) => {
 // @route   POST /api/tickets
 // @access  Private
 
+// export const createTicket = async (req, res, next) => {
+//   try {
+//     const { subject, description, priority, category, phone ,origin} = req.body;
+
+//     const ticket = await Ticket.create({
+//       subject,
+//       description,
+//       priority,
+//       category,
+//       phone,
+//       company: req.user.company,
+//       user: req.user._id,
+//       attachments: req.attachments || [], // Use processed attachments
+//     });
+//     if(!req.user.company){
+//       return res.status(400).json({status:'error',
+//         message:'company not found'
+//       })
+//     }
+
+//       if (!ticket) {
+//       return res.status(500).json({
+//         status: 'error',
+//         message: 'Failed to create ticket'
+//       });
+//     }
+
+//     // Map Cloudinary files to attachment object
+//     const attachments =
+//       req.files?.map((file) => ({
+//         originalname: file.originalname,
+//         filename: file.filename,
+//         path: file.path, // Cloudinary URL
+//         size: file.size,
+//         mimetype: file.mimetype,
+//       })) || [];
+
+//     const populatedTicket = await Ticket.findById(ticket._id).populate(
+//       "user company"
+//     );
+
+//     // Send email if needed
+//     await sendEmail({
+//       to: populatedTicket.user.email,
+//       subject: `SALKATECH Ticket Created: ${populatedTicket.ticketNumber}`,
+//       html: ticketCreatedTemplate(populatedTicket),
+//     });
+
+//     res.status(201).json({
+//       status: "success",
+//       data: { ticket: populatedTicket },
+//     });
+//   }  catch (error) {
+//     // Custom error message if save fails
+//     const message = error.message || 'Failed to create ticket';
+//     res.status(500).json({
+//       status: 'error',
+//       message
+//     });
+//   }
+// };
+
 export const createTicket = async (req, res, next) => {
   try {
-    const { subject, description, priority, category, phone ,origin} = req.body;
+    const { subject, description, priority, category, phone, origin } = req.body;
+
+    if (!req.user.company) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Company not found'
+      });
+    }
 
     const ticket = await Ticket.create({
       subject,
@@ -77,53 +146,78 @@ export const createTicket = async (req, res, next) => {
       phone,
       company: req.user.company,
       user: req.user._id,
-      attachments: req.attachments || [], // Use processed attachments
+      attachments: req.attachments || []
     });
-    if(!req.user.company){
-      return res.status(400).json({status:'error',
-        message:'company not found'
-      })
-    }
 
-      if (!ticket) {
+    if (!ticket) {
       return res.status(500).json({
         status: 'error',
         message: 'Failed to create ticket'
       });
     }
 
-    // Map Cloudinary files to attachment object
-    const attachments =
-      req.files?.map((file) => ({
-        originalname: file.originalname,
-        filename: file.filename,
-        path: file.path, // Cloudinary URL
-        size: file.size,
-        mimetype: file.mimetype,
-      })) || [];
+    const populatedTicket = await Ticket.findById(ticket._id).populate("user company");
 
-    const populatedTicket = await Ticket.findById(ticket._id).populate(
-      "user company"
-    );
-
-    // Send email if needed
+    // 1️⃣ Email to Client
     await sendEmail({
       to: populatedTicket.user.email,
-      subject: `SALKATECH Ticket Created: ${populatedTicket.ticketNumber}`,
-      html: ticketCreatedTemplate(populatedTicket),
+      subject: `🎫 SALKATECH Ticket Created: ${populatedTicket.ticketNumber}`,
+      html: ticketCreatedTemplate(populatedTicket, origin),
     });
+
+    // 2️⃣ Email to Admin (Assuming admin email is hardcoded or fetched from DB)
+    const adminEmail = "Upadhayayyogesh832@gmail.com"; // replace with dynamic logic if needed
+    await sendEmail({
+      to: adminEmail,
+      subject: `New Ticket Created: ${populatedTicket.ticketNumber}`,
+      html: `
+        <p>Hello Admin,</p>
+        <p>A new ticket has been created. Please assign it to a suitable engineer.</p>
+        <ul>
+          <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
+          <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
+          <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
+        </ul>
+        <a href="https://salka-tech-service-request-form.vercel.app/tickets/${ticket._id}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>
+      `
+    });
+
+    // 3️⃣ Email to Support (and optionally L1 if severity = high)
+    const supportEmail = "Upadhayayyogesh832@gmail.com";
+    const l1Email = "Upadhayayyogesh832@gmail.com";
+
+    let supportEmailBody = `
+      <p>Hello Support Team,</p>
+      <p>A new ticket has been generated.</p>
+      <ul>
+        <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
+        <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
+        <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
+      </ul>
+    `;
+
+    await sendEmail({
+      to: supportEmail,
+      subject: `📩 New Ticket Assigned: ${populatedTicket.ticketNumber}`,
+      html: supportEmailBody
+    });
+
+    if (populatedTicket.priority === "high") {
+      await sendEmail({
+        to: l1Email,
+        subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
+        html: supportEmailBody + `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`
+      });
+    }
 
     res.status(201).json({
       status: "success",
       data: { ticket: populatedTicket },
     });
-  }  catch (error) {
-    // Custom error message if save fails
+
+  } catch (error) {
     const message = error.message || 'Failed to create ticket';
-    res.status(500).json({
-      status: 'error',
-      message
-    });
+    res.status(500).json({ status: 'error', message });
   }
 };
 // const getLeastBusyEmployee = async (companyId) => {
@@ -328,6 +422,39 @@ export const deleteTicket = async (req, res, next) => {
 // @desc    Assign ticket to an employee
 // @route   PATCH /api/tickets/:id/assign
 // @access  Private/Admin
+// export const assignTicket = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const { assignedTo } = req.body;
+
+//     const ticket = await Ticket.findByIdAndUpdate(
+//       id,
+//       { assignedTo },
+//       { new: true, runValidators: true }
+//     ).populate("assignedTo");
+
+//     if (!ticket) {
+//       return next(new AppError("No ticket found with that ID", 404));
+//     }
+//     if (assignedTo && ticket.assignedTo) {
+//       await sendEmail({
+//         to: ticket.assignedTo.email,
+//         subject: `New Ticket Assigned: ${ticket.ticketNumber}`,
+//         html: `<p>Hello ${ticket.assignedTo.name},</p>
+//                <p>A new ticket has been assigned to you. Please check and resolve it ASAP.</p>
+//                <p>Ticket Subject: ${ticket.subject}</p>`,
+//       });
+//     }
+//     res.status(200).json({
+//       status: "success",
+//       data: {
+//         ticket,
+//       },
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 export const assignTicket = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -337,25 +464,40 @@ export const assignTicket = async (req, res, next) => {
       id,
       { assignedTo },
       { new: true, runValidators: true }
-    ).populate("assignedTo");
+    ).populate("assignedTo user");
 
     if (!ticket) {
-      return next(new AppError("No ticket found with that ID", 404));
+      return res.status(404).json({ status: 'error', message: "No ticket found with that ID" });
     }
+
+    // 1️⃣ Email to assigned engineer
     if (assignedTo && ticket.assignedTo) {
       await sendEmail({
         to: ticket.assignedTo.email,
-        subject: `New Ticket Assigned: ${ticket.ticketNumber}`,
+        subject: `📌 New Ticket Assigned: ${ticket.ticketNumber}`,
         html: `<p>Hello ${ticket.assignedTo.name},</p>
-               <p>A new ticket has been assigned to you. Please check and resolve it ASAP.</p>
-               <p>Ticket Subject: ${ticket.subject}</p>`,
+               <p>A new ticket has been assigned to you. Please resolve it as soon as possible.</p>
+               <ul>
+                 <li><strong>Subject:</strong> ${ticket.subject}</li>
+                 <li><strong>Priority:</strong> ${ticket.priority}</li>
+               </ul>`
       });
     }
+
+    // 2️⃣ Email to client about engineer assignment
+    if (ticket.user?.email && ticket.assignedTo?.name) {
+      await sendEmail({
+        to: ticket.user.email,
+        subject: `👨‍🔧 Engineer Assigned to Your Ticket: ${ticket.ticketNumber}`,
+        html: `<p>Hello ${ticket.user.name},</p>
+               <p>We have assigned <strong>Er. ${ticket.assignedTo.name}</strong> to assist you with your ticket.</p>
+               <p>They will reach out to you shortly.</p>`
+      });
+    }
+
     res.status(200).json({
       status: "success",
-      data: {
-        ticket,
-      },
+      data: { ticket },
     });
   } catch (error) {
     next(error);
