@@ -133,8 +133,8 @@ import cron from 'node-cron';
 import Ticket from '../models/Ticket.js';
 import { sendEmail } from '../services/emailService.js';
 
-const supervisorEmail = 'Upadhayayyogesh832@gmail.com';
-const directorEmail = 'Upadhayayyogesh832@gmail.com';
+const supervisorEmail = 'premc3003@gmail.com';
+const directorEmail = 'premc3003@gmail.com';
 
 // Ticket age thresholds in ms
 const SIX_HOURS = 6 * 60 * 60 * 1000;
@@ -151,72 +151,131 @@ const runEscalationJob = async () => {
       assignedTo: { $ne: null }
     }).populate('assignedTo user');
 
+    // for (const ticket of tickets) {
+    //   const age = now - new Date(ticket.createdAt);
+
+    //   let level = null;
+    //   let recipient = null;
+    //   let subject = '';
+    //   let body = '';
+
+    //   // Determine escalation level
+    //   if (age >= NINE_HOURS) {
+    //     level = 'L2';
+    //     recipient = directorEmail;
+    //     subject = `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} Needs Urgent Attention`;
+    //     body = `
+    //       <p>Dear Director,</p>
+    //       <p>The following ticket has not been resolved in over 9 hours and is escalated to Level 2.</p>
+    //       <ul>
+    //         <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
+    //         <li><strong>Subject:</strong> ${ticket.subject}</li>
+    //         <li><strong>Assigned Engineer:</strong> ${ticket.assignedTo.name}</li>
+    //         <li><strong>Created At:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
+    //       </ul>
+    //       <p>Please intervene immediately.</p>`;
+    //   } else if (age >= SIX_HOURS) {
+    //     level = 'L1';
+    //     recipient = supervisorEmail;
+    //     subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber} Needs Supervisor Attention`;
+    //     body = `
+    //       <p>Dear Supervisor,</p>
+    //       <p>The following ticket has not been resolved in over 6 hours and is escalated to Level 1.</p>
+    //       <ul>
+    //         <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
+    //         <li><strong>Subject:</strong> ${ticket.subject}</li>
+    //         <li><strong>Assigned Engineer:</strong> ${ticket.assignedTo.name}</li>
+    //         <li><strong>Created At:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
+    //       </ul>
+    //       <p>Please take action now.</p>`;
+    //   } else {
+    //     // Immediate alert to assigned engineer (L0)
+    //     level = 'L0';
+    //     recipient = ticket.assignedTo.email;
+    //     subject = `🕒 Reminder: Ticket ${ticket.ticketNumber} is pending`;
+    //     body = `
+    //       <p>Dear ${ticket.assignedTo.name},</p>
+    //       <p>This is a reminder that ticket <strong>${ticket.ticketNumber}</strong> is still open.</p>
+    //       <ul>
+    //         <li><strong>Subject:</strong> ${ticket.subject}</li>
+    //         <li><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
+    //       </ul>
+    //       <p>Please resolve it as soon as possible.</p>`;
+    //   }
+
+    //   await sendEmail({
+    //     to: recipient,
+    //     subject,
+    //     html: body
+    //   });
+
+    //   console.log(`📧 Escalation (${level}) email sent for ticket: ${ticket.ticketNumber}`);
+    // }
     for (const ticket of tickets) {
-      const age = now - new Date(ticket.createdAt);
+  const age = now - new Date(ticket.createdAt);
 
-      let level = null;
-      let recipient = null;
-      let subject = '';
-      let body = '';
+  if (!ticket.assignedTo) {
+    console.warn(`⛔ Skipping ticket ${ticket.ticketNumber} — No assigned engineer.`);
+    continue;
+  }
 
-      // Determine escalation level
-      if (age >= NINE_HOURS) {
-        level = 'L2';
-        recipient = directorEmail;
-        subject = `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} Needs Urgent Attention`;
-        body = `
-          <p>Dear Director,</p>
-          <p>The following ticket has not been resolved in over 9 hours and is escalated to Level 2.</p>
-          <ul>
-            <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
-            <li><strong>Subject:</strong> ${ticket.subject}</li>
-            <li><strong>Assigned Engineer:</strong> ${ticket.assignedTo.name}</li>
-            <li><strong>Created At:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
-          </ul>
-          <p>Please intervene immediately.</p>`;
-      } else if (age >= SIX_HOURS) {
-        level = 'L1';
-        recipient = supervisorEmail;
-        subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber} Needs Supervisor Attention`;
-        body = `
-          <p>Dear Supervisor,</p>
-          <p>The following ticket has not been resolved in over 6 hours and is escalated to Level 1.</p>
-          <ul>
-            <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
-            <li><strong>Subject:</strong> ${ticket.subject}</li>
-            <li><strong>Assigned Engineer:</strong> ${ticket.assignedTo.name}</li>
-            <li><strong>Created At:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
-          </ul>
-          <p>Please take action now.</p>`;
-      } else {
-        // Immediate alert to assigned engineer (L0)
-        level = 'L0';
-        recipient = ticket.assignedTo.email;
-        subject = `🕒 Reminder: Ticket ${ticket.ticketNumber} is pending`;
-        body = `
-          <p>Dear ${ticket.assignedTo.name},</p>
-          <p>This is a reminder that ticket <strong>${ticket.ticketNumber}</strong> is still open.</p>
-          <ul>
-            <li><strong>Subject:</strong> ${ticket.subject}</li>
-            <li><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
-          </ul>
-          <p>Please resolve it as soon as possible.</p>`;
+  let level = null;
+  let recipient = null;
+  let subject = '';
+  let body = '';
+  const employee = ticket.assignedTo;
+
+  if (age >= NINE_HOURS) {
+    level = 'L2';
+    recipient = directorEmail;
+    subject = `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} Needs Urgent Attention`;
+    body = `
+      <p>Dear Director,</p>
+      <p>The following ticket has not been resolved in over 9 hours:</p>
+      <ul>
+        <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
+        <li><strong>Engineer:</strong> ${employee.name}</li>
+      </ul>`;
+  } else if (age >= SIX_HOURS) {
+    level = 'L1';
+    recipient = supervisorEmail;
+    subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber}`;
+    body = `
+      <p>Dear Supervisor,</p>
+      <p>Ticket needs escalation after 6 hours:</p>
+      <ul>
+        <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
+        <li><strong>Engineer:</strong> ${employee.name}</li>
+      </ul>`;
+  } else {
+    level = 'L0';
+    recipient = employee.email;
+    subject = `🕒 Reminder: Ticket ${ticket.ticketNumber}`;
+    body = `
+      <p>Hello ${employee.name},</p>
+      <p>This is a reminder for ticket:</p>
+      <ul>
+        <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
+        <li><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
+      </ul>`;
+  }
+
+   try {
+        await sendEmail({ to: recipient, subject, html: body });
+        console.log(`📧 Email sent for ${ticket.ticketNumber} to ${recipient} [${level}]`);
+      } catch (mailError) {
+        console.error(`❌ Failed to send email for ticket ${ticket.ticketNumber}:`, mailError.message);
       }
 
-      await sendEmail({
-        to: recipient,
-        subject,
-        html: body
-      });
+  console.log(`📧 Email sent for ${ticket.ticketNumber} to ${recipient} [${level}]`);
+}
 
-      console.log(`📧 Escalation (${level}) email sent for ticket: ${ticket.ticketNumber}`);
-    }
   } catch (error) {
     console.error("❌ Escalation Job Error:", error);
   }
 };
 
 // ⏱️ Cron: every 5 minutes for demo; change to every 6 hrs in prod
-cron.schedule('*/5 * * * *', () => {
+cron.schedule('*/2 * * * *', () => {
   runEscalationJob();
 });

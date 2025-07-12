@@ -213,7 +213,7 @@ export const ticketCreatedTemplate = (ticket, origin)=> {
         <h2>🎫 Ticket Created - ${ticket.ticketNumber}</h2>
 
         <p>Hello <strong>${ticket.user.name}</strong>,</p>
-        <p>Thank you for contacting <strong>SALKATECH</strong> support. Your ticket has been successfully created. Here are the details:</p>
+        <p>Thank you for contacting <strong>SALKATECH</strong> support.  your ticket created successfully we will revert you soon and  Here are the Ticket details:</p>
 
         <table>
           <tr><td><strong>Ticket Number</strong></td><td>${
