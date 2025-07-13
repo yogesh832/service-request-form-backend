@@ -166,7 +166,7 @@ export const createTicket = async (req, res, next) => {
     });
 
     // 2️⃣ Email to Admin (Assuming admin email is hardcoded or fetched from DB)
-    const adminEmail = "Upadhayayyogesh832@gmail.com"; // replace with dynamic logic if needed
+    const adminEmail = "admin@gmail.com"; // replace with dynamic logic if needed
     await sendEmail({
       to: adminEmail,
       subject: `New Ticket Created: ${populatedTicket.ticketNumber}`,
@@ -183,8 +183,8 @@ export const createTicket = async (req, res, next) => {
     });
 
     // 3️⃣ Email to Support (and optionally L1 if severity = high)
-    const supportEmail = "Upadhayayyogesh832@gmail.com";
-    const l1Email = "Upadhayayyogesh832@gmail.com";
+    const supportEmail = "arpitaupadhayay759@gmail.com";
+    const l1Email = "mr.yashyogesh@gmail.com";
 
     let supportEmailBody = `
       <p>Hello Support Team,</p>
