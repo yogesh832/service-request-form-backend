@@ -133,8 +133,8 @@ import cron from 'node-cron';
 import Ticket from '../models/Ticket.js';
 import { sendEmail } from '../services/emailService.js';
 
-const supervisorEmail = 'premc3003@gmail.com';
-const directorEmail = 'premc3003@gmail.com';
+const supervisorEmail = 'arpitaupadhayay759@gmail.com';
+const directorEmail = 'mr.yashyogesh@gmail.com';
 
 // Ticket age thresholds in ms
 const SIX_HOURS = 6 * 60 * 60 * 1000;
