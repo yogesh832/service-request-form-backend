@@ -213,7 +213,7 @@ export const ticketCreatedTemplate = (ticket, origin)=> {
         <h2>🎫 Ticket Created - ${ticket.ticketNumber}</h2>
 
         <p>Hello <strong>${ticket.user.name}</strong>,</p>
-        <p>Thank you for contacting <strong>SALKATECH</strong> support.  your ticket created successfully we will revert you soon and  Here are the Ticket details:</p>
+        <p>Thank you for contacting <strong>SALKATECH</strong> support.  Ticket created successfully we will revert you soon and  Here are the Ticket details:</p>
 
         <table>
           <tr><td><strong>Ticket Number</strong></td><td>${
@@ -239,12 +239,12 @@ export const ticketCreatedTemplate = (ticket, origin)=> {
           }
         </table>
         <p style="margin-top: 20px;">
-  You can view your ticket here: 
+  You can view Ticket here: 
   <a href="https://salka-tech-service-request-form.vercel.app/tickets/${ticket._id}" target="_blank" style="color:#4b0082;">View Ticket</a>
 </p>
 
 
-        <p style="margin-top: 20px;">Our team will review your request and respond shortly.</p>
+        <p style="margin-top: 20px;">Our team will review request and respond shortly.</p>
 
         <hr />
 
@@ -273,7 +273,7 @@ export const ticketReminderTemplate = (employeeName, tickets) => {
       <ul>
         ${ticketListHtml}
       </ul>
-      <p>Thank you for your attention to these tickets.</p>
+      <p>Thank you for attention to these tickets.</p>
       <p>Best regards,<br/>SALKATECH Support Team</p>
       <p>Best regards,<br/>SALKATECH Support Team</p>
     </div>
@@ -283,9 +283,9 @@ export const ticketReminderTemplate = (employeeName, tickets) => {
 
 export const ticketResolvedTemplate = ({ name, ticketNumber, subject, resolvedAt }) => `
   <div style="font-family: Arial, sans-serif; padding: 20px;">
-    <h2 style="color: green;">🎉 Your Ticket Has Been Resolved!</h2>
-    <p>Hi ${name},</p>
-    <p>We are happy to inform you that your ticket has been marked as <strong>Resolved</strong>.</p>
+    <h2 style="color: green;">🎉  Ticket Has Been Resolved!</h2>
+    <p>Hi ,</p>
+    <p>We are happy to inform you that  ticket has been marked as <strong>Resolved</strong>.</p>
 
     <ul style="background: #f4f4f4; padding: 10px; border-radius: 6px;">
       <li><strong>Ticket Number:</strong> ${ticketNumber}</li>

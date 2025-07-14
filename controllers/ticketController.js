@@ -6,7 +6,7 @@ import { sendEmail } from "../services/emailService.js";
 import {
   ticketCreatedTemplate,
   ticketReminderTemplate,
-  ticketResolvedTemplate
+  ticketResolvedTemplate,
 } from "../utils/emailTemplates.js";
 import User from "../models/User.js";
 
@@ -129,12 +129,13 @@ export const getAllTickets = async (req, res, next) => {
 
 export const createTicket = async (req, res, next) => {
   try {
-    const { subject, description, priority, category, phone, origin } = req.body;
+    const { subject, description, priority, category, phone, origin } =
+      req.body;
 
     if (!req.user.company) {
       return res.status(400).json({
-        status: 'error',
-        message: 'Company not found'
+        status: "error",
+        message: "Company not found",
       });
     }
 
@@ -146,18 +147,20 @@ export const createTicket = async (req, res, next) => {
       phone,
       company: req.user.company,
       user: req.user._id,
-      attachments: req.attachments || []
+      attachments: req.attachments || [],
     });
 
     if (!ticket) {
       return res.status(500).json({
-        status: 'error',
-        message: 'Failed to create ticket'
+        status: "error",
+        message: "Failed to create ticket",
       });
     }
 
-    const populatedTicket = await Ticket.findById(ticket._id).populate("user company");
-
+    const populatedTicket = await Ticket.findById(ticket._id).populate(
+      "user company"
+    );
+    console.log(populatedTicket);
     // 1️⃣ Email to Client
     await sendEmail({
       to: populatedTicket.user.email,
@@ -178,8 +181,8 @@ export const createTicket = async (req, res, next) => {
           <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
           <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
         </ul>
-        <a href="https://salka-tech-service-request-form.vercel.app/tickets/${ticket._id}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>
-      `
+        <a href="https://salka-tech-service-request-form.vercel.app/tickets/687475ff820a5df142e68df5" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>
+      `,
     });
 
     // 3️⃣ Email to Support (and optionally L1 if severity = high)
@@ -198,15 +201,17 @@ export const createTicket = async (req, res, next) => {
 
     await sendEmail({
       to: supportEmail,
-      subject: `📩 New Ticket Assigned: ${populatedTicket.ticketNumber}`,
-      html: supportEmailBody
+      subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
+      html: supportEmailBody,
     });
 
     if (populatedTicket.priority === "high") {
       await sendEmail({
         to: l1Email,
         subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
-        html: supportEmailBody + `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`
+        html:
+          supportEmailBody +
+          `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
       });
     }
 
@@ -214,10 +219,9 @@ export const createTicket = async (req, res, next) => {
       status: "success",
       data: { ticket: populatedTicket },
     });
-
   } catch (error) {
-    const message = error.message || 'Failed to create ticket';
-    res.status(500).json({ status: 'error', message });
+    const message = error.message || "Failed to create ticket";
+    res.status(500).json({ status: "error", message });
   }
 };
 // const getLeastBusyEmployee = async (companyId) => {
@@ -467,7 +471,9 @@ export const assignTicket = async (req, res, next) => {
     ).populate("assignedTo user");
 
     if (!ticket) {
-      return res.status(404).json({ status: 'error', message: "No ticket found with that ID" });
+      return res
+        .status(404)
+        .json({ status: "error", message: "No ticket found with that ID" });
     }
 
     // 1️⃣ Email to assigned engineer
@@ -480,7 +486,8 @@ export const assignTicket = async (req, res, next) => {
                <ul>
                  <li><strong>Subject:</strong> ${ticket.subject}</li>
                  <li><strong>Priority:</strong> ${ticket.priority}</li>
-               </ul>`
+               </ul>
+               <a href="https://salka-tech-service-request-form.vercel.app/tickets/${ticket._id}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>`,
       });
     }
 
@@ -491,7 +498,7 @@ export const assignTicket = async (req, res, next) => {
         subject: `👨‍🔧 Engineer Assigned to Your Ticket: ${ticket.ticketNumber}`,
         html: `<p>Hello ${ticket.user.name},</p>
                <p>We have assigned <strong>Er. ${ticket.assignedTo.name}</strong> to assist you with your ticket.</p>
-               <p>They will reach out to you shortly.</p>`
+               <p>They will reach out to you shortly.</p>`,
       });
     }
 
@@ -533,16 +540,16 @@ export const assignTicket = async (req, res, next) => {
 //   try {
 //     const { status } = req.body;
 //     const update = { status };
-    
+
 //     // Set resolvedAt timestamp when status changes to resolved
 //     if (status === 'resolved') {
 //       update.resolvedAt = new Date();
-      
+
 //       // Track resolution event for analytics
 //       // You'll need to implement your analytics tracking system here
 //       // Example: analytics.track('ticket_resolved', { ticketId: req.params.id });
 //     }
-    
+
 //     const ticket = await Ticket.findByIdAndUpdate(
 //       req.params.id,
 //       update,
@@ -569,23 +576,22 @@ export const updateTicketStatus = async (req, res, next) => {
     const update = { status };
 
     // ✔️ Agar ticket resolved ho rahi hai to resolvedAt set karo
-    if (status === 'resolved') {
+    if (status === "resolved") {
       update.resolvedAt = new Date();
     }
 
     // ✔️ Update + user ko populate karo (jise ticket bheji gayi thi)
-    const ticket = await Ticket.findByIdAndUpdate(
-      req.params.id,
-      update,
-      { new: true, runValidators: true }
-    ).populate('user'); // 👈 Important for email sending
+    const ticket = await Ticket.findByIdAndUpdate(req.params.id, update, {
+      new: true,
+      runValidators: true,
+    }).populate("user"); // 👈 Important for email sending
 
     if (!ticket) {
       return next(new AppError("No ticket found with that ID", 404));
     }
 
     // ✔️ Send resolved email only if status === resolved
-    if (status === 'resolved' && ticket.user?.email) {
+    if (status === "resolved" && ticket.user?.email) {
       await sendEmail({
         to: ticket.user.email,
         subject: `✅ Your ticket "${ticket.subject}" has been resolved`,
@@ -604,7 +610,6 @@ export const updateTicketStatus = async (req, res, next) => {
         ticket,
       },
     });
-
   } catch (error) {
     next(error);
   }

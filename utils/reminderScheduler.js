@@ -137,8 +137,11 @@ const supervisorEmail = 'arpitaupadhayay759@gmail.com';
 const directorEmail = 'mr.yashyogesh@gmail.com';
 
 // Ticket age thresholds in ms
-const SIX_HOURS = 6 * 60 * 60 * 1000;
-const NINE_HOURS = 9 * 60 * 60 * 1000;
+// const SIX_HOURS = 6 * 60 * 60 * 1000;
+// const NINE_HOURS = 9 * 60 * 60 * 1000;
+const SIX_HOURS = 6 * 60 * 1000; //6 mint for testing
+const NINE_HOURS = 9 * 60 * 1000;
+
 
 const runEscalationJob = async () => {
   console.log("🚀 Running Ticket Escalation Job...");
@@ -252,7 +255,7 @@ const runEscalationJob = async () => {
     recipient = employee.email;
     subject = `🕒 Reminder: Ticket ${ticket.ticketNumber}`;
     body = `
-      <p>Hello ${employee.name},</p>
+      <p>Hello ,</p>
       <p>This is a reminder for ticket:</p>
       <ul>
         <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
