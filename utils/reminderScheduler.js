@@ -1,4 +1,3 @@
-
 // import cron from 'node-cron';
 // import Ticket from '../models/Ticket.js';
 // import { sendEmail } from '../services/emailService.js';
@@ -12,7 +11,6 @@
 // const SIX_HOURS = 6 * 60 * 1000; //6 mint for testing
 // const NINE_HOURS = 9 * 60 * 1000;
 
-
 // const runEscalationJob = async () => {
 //   console.log("🚀 Running Ticket Escalation Job...");
 
@@ -23,7 +21,6 @@
 //       status: { $in: ['open', 'pending'] },
 //       assignedTo: { $ne: null }
 //     }).populate('assignedTo user');
-
 
 //     for (const ticket of tickets) {
 //   const age = now - new Date(ticket.createdAt);
@@ -119,7 +116,6 @@
 //   `;
 // }
 
-
 //    try {
 //         await sendEmail({ to: recipient, subject, html: body });
 //         console.log(`📧 Email sent for ${ticket.ticketNumber} to ${recipient} [${level}]`);
@@ -139,10 +135,10 @@
 // cron.schedule('*/60 * * * *', () => {
 //   runEscalationJob();
 // });
-import cron from 'node-cron';
-import Ticket from '../models/Ticket.js';
-import User from '../models/User.js'; // 👈 Import User model
-import { sendEmail } from '../services/emailService.js';
+import cron from "node-cron";
+import Ticket from "../models/Ticket.js";
+import User from "../models/User.js"; // 👈 Import User model
+import { sendEmail } from "../services/emailService.js";
 
 // Time thresholds for escalation
 const SIX_HOURS = 6 * 60 * 1000;
@@ -166,22 +162,22 @@ const runEscalationJob = async () => {
     }
 
     const tickets = await Ticket.find({
-      status: { $in: ['open', 'pending'] },
-      assignedTo: { $ne: null }
-    }).populate('assignedTo user');
+      status: { $in: ["open", "pending"] },
+      assignedTo: { $ne: null },
+    }).populate("assignedTo user");
 
     for (const ticket of tickets) {
       const age = now - new Date(ticket.createdAt);
       const employee = ticket.assignedTo;
-      const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${ticket._id}`;
+      const ticketViewUrl = `https://service-request-jhgh.vercel.app/tickets/${ticket._id}`;
 
       let level = null;
       let recipient = null;
-      let subject = '';
-      let body = '';
+      let subject = "";
+      let body = "";
 
       if (age >= NINE_HOURS) {
-        level = 'L2';
+        level = "L2";
         recipient = director.email;
         subject = `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} Needs Urgent Attention`;
         body = `
@@ -195,7 +191,7 @@ const runEscalationJob = async () => {
           <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #b91c1c; color: white; text-decoration: none; border-radius: 4px;">🚨 View Ticket</a>
         `;
       } else if (age >= SIX_HOURS) {
-        level = 'L1';
+        level = "L1";
         recipient = supervisor.email;
         subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber}`;
         body = `
@@ -209,7 +205,7 @@ const runEscalationJob = async () => {
           <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 4px;">⚠️ View Ticket</a>
         `;
       } else {
-        level = 'L0';
+        level = "L0";
         recipient = employee.email;
         subject = `🕒 Reminder: Ticket ${ticket.ticketNumber}`;
         body = `
@@ -218,7 +214,9 @@ const runEscalationJob = async () => {
           <ul>
             <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
             <li><strong>Title:</strong> ${ticket.subject}</li>
-            <li><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
+            <li><strong>Created:</strong> ${new Date(
+              ticket.createdAt
+            ).toLocaleString()}</li>
           </ul>
           <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 4px;">📄 View Ticket</a>
         `;
@@ -226,9 +224,14 @@ const runEscalationJob = async () => {
 
       try {
         await sendEmail({ to: recipient, subject, html: body });
-        console.log(`📧 Email sent for ${ticket.ticketNumber} to ${recipient} [${level}]`);
+        console.log(
+          `📧 Email sent for ${ticket.ticketNumber} to ${recipient} [${level}]`
+        );
       } catch (mailError) {
-        console.error(`❌ Failed to send email for ticket ${ticket.ticketNumber}:`, mailError.message);
+        console.error(
+          `❌ Failed to send email for ticket ${ticket.ticketNumber}:`,
+          mailError.message
+        );
       }
     }
   } catch (error) {
@@ -237,6 +240,6 @@ const runEscalationJob = async () => {
 };
 
 // ⏱️ Cron Job (every 2 mins for testing)
-cron.schedule('*/6 * * * *', () => {
+cron.schedule("*/6 * * * *", () => {
   runEscalationJob();
 });
