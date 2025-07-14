@@ -237,6 +237,6 @@ const runEscalationJob = async () => {
 };
 
 // ⏱️ Cron Job (every 2 mins for testing)
-cron.schedule('*/60 * * * *', () => {
+cron.schedule('*/6 * * * *', () => {
   runEscalationJob();
 });
