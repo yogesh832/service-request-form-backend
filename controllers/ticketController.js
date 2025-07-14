@@ -168,52 +168,100 @@ export const createTicket = async (req, res, next) => {
       html: ticketCreatedTemplate(populatedTicket, origin),
     });
 
-    // 2️⃣ Email to Admin (Assuming admin email is hardcoded or fetched from DB)
-    const adminEmail = "admin@gmail.com"; // replace with dynamic logic if needed
-    await sendEmail({
-      to: adminEmail,
-      subject: `New Ticket Created: ${populatedTicket.ticketNumber}`,
-      html: `
-        <p>Hello Admin,</p>
-        <p>A new ticket has been created. Please assign it to a suitable engineer.</p>
-        <ul>
-          <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
-          <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
-          <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
-        </ul>
-        <a href="https://salka-tech-service-request-form.vercel.app/tickets/687475ff820a5df142e68df5" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>
-      `,
-    });
+    // // 2️⃣ Email to Admin (Assuming admin email is hardcoded or fetched from DB)
+    // const adminEmail = "admin@gmail.com"; // replace with dynamic logic if needed
+    // await sendEmail({
+    //   to: adminEmail,
+    //   subject: `New Ticket Created: ${populatedTicket.ticketNumber}`,
+    //   html: `
+    //     <p>Hello Admin,</p>
+    //     <p>A new ticket has been created. Please assign it to a suitable engineer.</p>
+    //     <ul>
+    //       <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
+    //       <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
+    //       <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
+    //     </ul>
+    //     <a href="https://salka-tech-service-request-form.vercel.app/tickets/687475ff820a5df142e68df5" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>
+    //   `,
+    // });
 
-    // 3️⃣ Email to Support (and optionally L1 if severity = high)
-    const supportEmail = "arpitaupadhayay759@gmail.com";
-    const l1Email = "mr.yashyogesh@gmail.com";
+    // // 3️⃣ Email to Support (and optionally L1 if severity = high)
+    // const supportEmail = "arpitaupadhayay759@gmail.com";
+    // const l1Email = "mr.yashyogesh@gmail.com";
 
-    let supportEmailBody = `
-      <p>Hello Support Team,</p>
-      <p>A new ticket has been generated.</p>
-      <ul>
-        <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
-        <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
-        <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
-      </ul>
-    `;
+    // let supportEmailBody = `
+    //   <p>Hello Support Team,</p>
+    //   <p>A new ticket has been generated.</p>
+    //   <ul>
+    //     <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
+    //     <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
+    //     <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
+    //   </ul>
+    // `;
 
-    await sendEmail({
-      to: supportEmail,
-      subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
-      html: supportEmailBody,
-    });
+    // await sendEmail({
+    //   to: supportEmail,
+    //   subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
+    //   html: supportEmailBody,
+    // });
 
-    if (populatedTicket.priority === "high") {
-      await sendEmail({
-        to: l1Email,
-        subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
-        html:
-          supportEmailBody +
-          `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
-      });
-    }
+    // if (populatedTicket.priority === "high") {
+    //   await sendEmail({
+    //     to: l1Email,
+    //     subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
+    //     html:
+    //       supportEmailBody +
+    //       `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
+    //   });
+    // }
+    const adminEmail = "arpitaupadhayay759@gmail.com";
+const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${populatedTicket._id}`;
+
+// 2️⃣ Email to Admin
+await sendEmail({
+  to: adminEmail,
+  subject: `New Ticket Created: ${populatedTicket.ticketNumber}`,
+  html: `
+    <p>Hello Admin,</p>
+    <p>A new ticket has been created. Please assign it to a suitable engineer.</p>
+    <ul>
+      <li><strong>Ticket Number:</strong> ${populatedTicket.ticketNumber}</li>
+      <li><strong>Title:</strong> ${populatedTicket.subject}</li>
+      <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
+    </ul>
+    <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">🔍 View Ticket</a>
+  `,
+});
+
+// 3️⃣ Email to Support (and optionally L1 if severity = high)
+const supportEmail = "arpitaupadhayay759@gmail.com";
+const l1Email = "mr.yashyogesh@gmail.com";
+
+let supportEmailBody = `
+  <p>Hello Support Team,</p>
+  <p>A new ticket has been generated.</p>
+  <ul>
+    <li><strong>Ticket Number:</strong> ${populatedTicket.ticketNumber}</li>
+    <li><strong>Title:</strong> ${populatedTicket.subject}</li>
+    <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
+  </ul>
+  <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">🔍 View Ticket</a>
+`;
+
+await sendEmail({
+  to: supportEmail,
+  subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
+  html: supportEmailBody,
+});
+
+if (populatedTicket.priority === "high") {
+  await sendEmail({
+    to: l1Email,
+    subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
+    html: supportEmailBody + `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
+  });
+}
+
 
     res.status(201).json({
       status: "success",
@@ -459,57 +507,150 @@ export const deleteTicket = async (req, res, next) => {
 //     next(error);
 //   }
 // };
-export const assignTicket = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { assignedTo } = req.body;
 
-    const ticket = await Ticket.findByIdAndUpdate(
-      id,
-      { assignedTo },
-      { new: true, runValidators: true }
-    ).populate("assignedTo user");
+// export const assignTicket = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const { assignedTo } = req.body;
 
-    if (!ticket) {
-      return res
-        .status(404)
-        .json({ status: "error", message: "No ticket found with that ID" });
-    }
+//     const ticket = await Ticket.findByIdAndUpdate(
+//       id,
+//       { assignedTo },
+//       { new: true, runValidators: true }
+//     ).populate("assignedTo user");
 
-    // 1️⃣ Email to assigned engineer
-    if (assignedTo && ticket.assignedTo) {
-      await sendEmail({
-        to: ticket.assignedTo.email,
-        subject: `📌 New Ticket Assigned: ${ticket.ticketNumber}`,
-        html: `<p>Hello ${ticket.assignedTo.name},</p>
-               <p>A new ticket has been assigned to you. Please resolve it as soon as possible.</p>
-               <ul>
-                 <li><strong>Subject:</strong> ${ticket.subject}</li>
-                 <li><strong>Priority:</strong> ${ticket.priority}</li>
-               </ul>
-               <a href="https://salka-tech-service-request-form.vercel.app/tickets/${ticket._id}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>`,
-      });
-    }
+//     if (!ticket) {
+//       return res
+//         .status(404)
+//         .json({ status: "error", message: "No ticket found with that ID" });
+//     }
 
-    // 2️⃣ Email to client about engineer assignment
-    if (ticket.user?.email && ticket.assignedTo?.name) {
-      await sendEmail({
-        to: ticket.user.email,
-        subject: `👨‍🔧 Engineer Assigned to Your Ticket: ${ticket.ticketNumber}`,
-        html: `<p>Hello ${ticket.user.name},</p>
-               <p>We have assigned <strong>Er. ${ticket.assignedTo.name}</strong> to assist you with your ticket.</p>
-               <p>They will reach out to you shortly.</p>`,
-      });
-    }
+//     // 1️⃣ Email to assigned engineer
+//     if (assignedTo && ticket.assignedTo) {
+//       await sendEmail({
+//         to: ticket.assignedTo.email,
+//         subject: `📌 New Ticket Assigned: ${ticket.ticketNumber}`,
+//         html: `<p>Hello ${ticket.assignedTo.name},</p>
+//                <p>A new ticket has been assigned to you. Please resolve it as soon as possible.</p>
+//                <ul>
+//                  <li><strong>Subject:</strong> ${ticket.subject}</li>
+//                  <li><strong>Priority:</strong> ${ticket.priority}</li>
+//                </ul>
+//                <a href="https://salka-tech-service-request-form.vercel.app/tickets/${ticket._id}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>`,
+//       });
+//     }
 
-    res.status(200).json({
-      status: "success",
-      data: { ticket },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+//     // 2️⃣ Email to client about engineer assignment
+//     if (ticket.user?.email && ticket.assignedTo?.name) {
+//       await sendEmail({
+//         to: ticket.user.email,
+//         subject: `👨‍🔧 Engineer Assigned to Your Ticket: ${ticket.ticketNumber}`,
+//         html: `<p>Hello ${ticket.user.name},</p>
+//                <p>We have assigned <strong>Er. ${ticket.assignedTo.name}</strong> to assist you with your ticket.</p>
+//                <p>They will reach out to you shortly.</p>`,
+//       });
+//     }
+
+//     res.status(200).json({
+//       status: "success",
+//       data: { ticket },
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+// updated assign sample one 
+// export const assignTicket = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const { assignedTo } = req.body;
+
+//     // 1️⃣ Get the ticket first to know old assigned engineer
+//     const oldTicket = await Ticket.findById(id).populate("assignedTo user");
+//     if (!oldTicket) {
+//       return res
+//         .status(404)
+//         .json({ status: "error", message: "No ticket found with that ID" });
+//     }
+
+//     const oldEngineer = oldTicket.assignedTo;
+
+//     // 2️⃣ Update ticket with new assigned engineer
+//     const updatedTicket = await Ticket.findByIdAndUpdate(
+//       id,
+//       { assignedTo },
+//       { new: true, runValidators: true }
+//     ).populate("assignedTo user");
+
+//     const newEngineer = updatedTicket.assignedTo;
+//     const ticketUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${updatedTicket._id}`;
+
+//     // 3️⃣ Email to newly assigned engineer
+//     if (assignedTo && newEngineer) {
+//       await sendEmail({
+//         to: newEngineer.email,
+//         subject: `📌 New Ticket Assigned: ${updatedTicket.ticketNumber}`,
+//         html: `
+//           <p>Hello ${newEngineer.name},</p>
+//           <p>A ticket has been assigned to you. Please resolve it as soon as possible.</p>
+//           <ul>
+//             <li><strong>Ticket:</strong> ${updatedTicket.ticketNumber}</li>
+//             <li><strong>Subject:</strong> ${updatedTicket.subject}</li>
+//             <li><strong>Priority:</strong> ${updatedTicket.priority}</li>
+//           </ul>
+//           <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
+//         `,
+//       });
+//     }
+
+//     // 4️⃣ Email to client about reassignment
+//     // if (updatedTicket.user?.email && newEngineer?.name) {
+//     //   const reassignedText = oldEngineer
+//     //     ? `We have <strong>re-assigned</strong> your ticket from <strong>Er. ${oldEngineer.name}</strong> to <strong>Er. ${newEngineer.name}</strong>.`
+//     //     : `We have <strong>assigned</strong> <strong>Er. ${newEngineer.name}</strong> to assist you with your ticket.`;
+
+//     //   await sendEmail({
+//     //     to: updatedTicket.user.email,
+//     //     subject: `👨‍🔧 Engineer ${oldEngineer ? "Re-" : ""}Assigned: Ticket ${updatedTicket.ticketNumber}`,
+//     //     html: `
+//     //       <p>Hello ${updatedTicket.user.name},</p>
+//     //       <p>${reassignedText}</p>
+//     //       <p>They will reach out to you shortly.</p>
+//     //       <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
+//     //     `,
+//     //   });
+//     // }
+//     if (updatedTicket.user?.email && newEngineer?.name) {
+//   const reassignedText = oldEngineer
+//     ? `We have <strong>re-assigned</strong> your ticket from <strong>Er. ${oldEngineer.name}</strong> to <strong>Er. ${newEngineer.name}</strong>.`
+//     : `We have <strong>assigned</strong> <strong>Er. ${newEngineer.name}</strong> to assist you with your ticket.`;
+
+//   await sendEmail({
+//     to: updatedTicket.user.email,
+//     subject: `👨‍🔧 Engineer ${oldEngineer ? "Re-" : ""}Assigned: Ticket ${updatedTicket.ticketNumber}`,
+//     html: `
+//       <p>Hello ${updatedTicket.user.name},</p>
+//       <p>${reassignedText}</p>
+//       <ul>
+//         <li><strong>Ticket Number:</strong> ${updatedTicket.ticketNumber}</li>
+//         <li><strong>Title:</strong> ${updatedTicket.subject}</li>
+//       </ul>
+//       <p>They will reach out to you shortly.</p>
+//       <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
+//     `,
+//   });
+// }
+
+
+//     res.status(200).json({
+//       status: "success",
+//       data: { ticket: updatedTicket },
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 
 // // Add status update controller
 // export const updateTicketStatus = async (req, res, next) => {
@@ -570,6 +711,88 @@ export const assignTicket = async (req, res, next) => {
 //     next(error);
 //   }
 // };
+// new assign method 
+export const assignTicket = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { assignedTo } = req.body;
+
+    // 1️⃣ Fetch the current ticket to get existing assigned engineer
+    const oldTicket = await Ticket.findById(id).populate("assignedTo user");
+    if (!oldTicket) {
+      return res.status(404).json({ status: "error", message: "No ticket found with that ID" });
+    }
+
+    // 🔴 Prevent assigning the same engineer again
+    if (oldTicket.assignedTo?._id?.toString() === assignedTo) {
+      return res.status(400).json({
+        status: "error",
+        message: `This ticket is already assigned to Er. ${oldTicket.assignedTo.name}`,
+      });
+    }
+
+    // 2️⃣ Update the ticket with the new engineer
+    const updatedTicket = await Ticket.findByIdAndUpdate(
+      id,
+      { assignedTo },
+      { new: true, runValidators: true }
+    ).populate("assignedTo user");
+
+    const oldEngineer = oldTicket.assignedTo;
+    const newEngineer = updatedTicket.assignedTo;
+    const ticketUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${updatedTicket._id}`;
+
+    // 3️⃣ Send email to new engineer
+    if (newEngineer) {
+      await sendEmail({
+        to: newEngineer.email,
+        subject: `📌 New Ticket Assigned: ${updatedTicket.ticketNumber}`,
+        html: `
+          <p>Hello ${newEngineer.name},</p>
+          <p>A ticket has been assigned to you. Please resolve it as soon as possible.</p>
+          <ul>
+            <li><strong>Ticket:</strong> ${updatedTicket.ticketNumber}</li>
+            <li><strong>Title:</strong> ${updatedTicket.subject}</li>
+            <li><strong>Priority:</strong> ${updatedTicket.priority}</li>
+          </ul>
+          <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
+        `,
+      });
+    }
+
+    // 4️⃣ Send email to client
+    if (updatedTicket.user?.email && newEngineer?.name) {
+      const reassignedText = oldEngineer
+        ? `We have <strong>re-assigned</strong> your ticket from <strong>Er. ${oldEngineer.name}</strong> to <strong>Er. ${newEngineer.name}</strong>.`
+        : `We have <strong>assigned</strong> <strong>Er. ${newEngineer.name}</strong> to assist you with your ticket.`;
+
+      await sendEmail({
+        to: updatedTicket.user.email,
+        subject: `👨‍🔧 Engineer ${oldEngineer ? "Re-" : ""}Assigned: Ticket ${updatedTicket.ticketNumber}`,
+        html: `
+          <p>Hello ${updatedTicket.user.name},</p>
+          <p>${reassignedText}</p>
+          <ul>
+            <li><strong>Ticket Number:</strong> ${updatedTicket.ticketNumber}</li>
+            <li><strong>Title:</strong> ${updatedTicket.subject}</li>
+          </ul>
+          <p>They will reach out to you shortly.</p>
+          <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
+        `,
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: { ticket: updatedTicket },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
 export const updateTicketStatus = async (req, res, next) => {
   try {
     const { status } = req.body;

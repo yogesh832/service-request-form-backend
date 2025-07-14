@@ -228,40 +228,86 @@ const runEscalationJob = async () => {
   let body = '';
   const employee = ticket.assignedTo;
 
-  if (age >= NINE_HOURS) {
-    level = 'L2';
-    recipient = directorEmail;
-    subject = `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} Needs Urgent Attention`;
-    body = `
-      <p>Dear Director,</p>
-      <p>The following ticket has not been resolved in over 9 hours:</p>
-      <ul>
-        <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
-        <li><strong>Engineer:</strong> ${employee.name}</li>
-      </ul>`;
-  } else if (age >= SIX_HOURS) {
-    level = 'L1';
-    recipient = supervisorEmail;
-    subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber}`;
-    body = `
-      <p>Dear Supervisor,</p>
-      <p>Ticket needs escalation after 6 hours:</p>
-      <ul>
-        <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
-        <li><strong>Engineer:</strong> ${employee.name}</li>
-      </ul>`;
-  } else {
-    level = 'L0';
-    recipient = employee.email;
-    subject = `🕒 Reminder: Ticket ${ticket.ticketNumber}`;
-    body = `
-      <p>Hello ,</p>
-      <p>This is a reminder for ticket:</p>
-      <ul>
-        <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
-        <li><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
-      </ul>`;
-  }
+  // if (age >= NINE_HOURS) {
+  //   level = 'L2';
+  //   recipient = directorEmail;
+  //   subject = `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} Needs Urgent Attention`;
+  //   body = `
+  //     <p>Dear Director,</p>
+  //     <p>The following ticket has not been resolved in over 9 hours:</p>
+  //     <ul>
+  //       <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
+  //       <li><strong>Engineer:</strong> ${employee.name}</li>
+  //     </ul>`;
+  // } else if (age >= SIX_HOURS) {
+  //   level = 'L1';
+  //   recipient = supervisorEmail;
+  //   subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber}`;
+  //   body = `
+  //     <p>Dear Supervisor,</p>
+  //     <p>Ticket needs escalation after 6 hours:</p>
+  //     <ul>
+  //       <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
+  //       <li><strong>Engineer:</strong> ${employee.name}</li>
+  //     </ul>`;
+  // } else {
+  //   level = 'L0';
+  //   recipient = employee.email;
+  //   subject = `🕒 Reminder: Ticket ${ticket.ticketNumber}`;
+  //   body = `
+  //     <p>Hello ,</p>
+  //     <p>This is a reminder for ticket:</p>
+  //     <ul>
+  //       <li><strong>Ticket:</strong> ${ticket.ticketNumber}</li>
+  //       <li><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
+  //     </ul>`;
+  // }
+  const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${ticket._id}`;
+
+if (age >= NINE_HOURS) {
+  level = 'L2';
+  recipient = directorEmail;
+  subject = `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} Needs Urgent Attention`;
+  body = `
+    <p>Dear Director,</p>
+    <p>The following ticket has not been resolved in over 9 hours:</p>
+    <ul>
+      <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
+      <li><strong>Title:</strong> ${ticket.subject}</li>
+      <li><strong>Engineer:</strong> ${employee.name}</li>
+    </ul>
+    <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #b91c1c; color: white; text-decoration: none; border-radius: 4px;">🚨 View Ticket</a>
+  `;
+} else if (age >= SIX_HOURS) {
+  level = 'L1';
+  recipient = supervisorEmail;
+  subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber}`;
+  body = `
+    <p>Dear Supervisor,</p>
+    <p>Ticket needs escalation after 6 hours:</p>
+    <ul>
+      <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
+      <li><strong>Title:</strong> ${ticket.subject}</li>
+      <li><strong>Engineer:</strong> ${employee.name}</li>
+    </ul>
+    <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 4px;">⚠️ View Ticket</a>
+  `;
+} else {
+  level = 'L0';
+  recipient = employee.email;
+  subject = `🕒 Reminder: Ticket ${ticket.ticketNumber}`;
+  body = `
+    <p>Hello ${employee.name},</p>
+    <p>This is a reminder for the following ticket:</p>
+    <ul>
+      <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
+      <li><strong>Title:</strong> ${ticket.subject}</li>
+      <li><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
+    </ul>
+    <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 4px;">📄 View Ticket</a>
+  `;
+}
+
 
    try {
         await sendEmail({ to: recipient, subject, html: body });
