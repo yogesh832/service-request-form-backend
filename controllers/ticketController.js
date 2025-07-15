@@ -243,7 +243,7 @@ console.log("Director", director);
 
     // 3️⃣ Email to Support (and optionally L1 if severity = high)
     const supportEmail = adminEmail;
-    const l1Email = "mr.yashyogesh@gmail.com";
+    const l1Email = supervisor.email; // Assuming supervisor is the L1 engineer
 
     let supportEmailBody = `
   <p>Hello Support Team,</p>
