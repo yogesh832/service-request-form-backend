@@ -1,3 +1,125 @@
+import cron from "node-cron";
+import Ticket from "../models/Ticket.js";
+import User from "../models/User.js";
+import { sendEmail } from "../services/emailService.js";
+
+// Time thresholds for escalation
+const SIX_HOURS = 6 * 60 * 1000; // 6 minutes for testing
+const NINE_HOURS = 9 * 60 * 1000; // 9 minutes for testing
+
+const runEscalationJob = async () => {
+  console.log("🚀 Running Ticket Escalation Job...");
+
+  const now = new Date();
+
+  try {
+    // 🔍 Get Supervisor, Director, Admin from DB
+    const [supervisor, director, admin] = await Promise.all([
+      User.findOne({ name: "Supervisior" }),
+      User.findOne({ name: "Director" }),
+      User.findOne({ role: "admin" }),
+    ]);
+
+    console.log("Supervisor:", supervisor?.email || "❌ NOT FOUND");
+    console.log("Director:", director?.email || "❌ NOT FOUND");
+    console.log("Admin:", admin?.email || "❌ NOT FOUND");
+
+    if (!supervisor || !supervisor.email || !director || !director.email || !admin || !admin.email) {
+      console.error("❌ One or more required users not found in database.");
+      return;
+    }
+
+    // 🔍 Get tickets assigned and pending/open
+    const tickets = await Ticket.find({
+      status: { $in: ["open", "pending"] },
+      assignedTo: { $ne: null },
+    }).populate("assignedTo user");
+
+    for (const ticket of tickets) {
+      const age = now - new Date(ticket.createdAt);
+      const employee = ticket.assignedTo;
+      const ticketViewUrl = `https://service-request-jhgh.vercel.app/tickets/${ticket._id}`;
+
+      let level = null;
+      let recipient = null;
+      let subject = "";
+      let body = "";
+
+      // Handle missing employee email
+      if (!employee || !employee.email) {
+        console.warn(`⚠️ Skipping ticket ${ticket.ticketNumber} due to missing employee email`);
+        continue;
+      }
+
+      if (age >= NINE_HOURS) {
+        level = "L2";
+        recipient = director.email;
+        subject = `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} Needs Urgent Attention`;
+        body = `
+          <p>Dear Director,</p>
+          <p>The following ticket has not been resolved in over 9 hours:</p>
+          <ul>
+            <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
+            <li><strong>Title:</strong> ${ticket.subject}</li>
+            <li><strong>Engineer:</strong> ${employee.name}</li>
+          </ul>
+          <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #b91c1c; color: white; text-decoration: none; border-radius: 4px;">🚨 View Ticket</a>
+        `;
+      } else if (age >= SIX_HOURS) {
+        level = "L1";
+        recipient = supervisor.email;
+        subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber}`;
+        body = `
+          <p>Dear Supervisor,</p>
+          <p>Ticket needs escalation after 6 hours:</p>
+          <ul>
+            <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
+            <li><strong>Title:</strong> ${ticket.subject}</li>
+            <li><strong>Engineer:</strong> ${employee.name}</li>
+          </ul>
+          <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 4px;">⚠️ View Ticket</a>
+        `;
+      } else {
+        level = "L0";
+        recipient = employee.email;
+        subject = `🕒 Reminder: Ticket ${ticket.ticketNumber}`;
+        body = `
+          <p>Hello ${employee.name},</p>
+          <p>This is a reminder for the following ticket:</p>
+          <ul>
+            <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
+            <li><strong>Title:</strong> ${ticket.subject}</li>
+            <li><strong>Created:</strong> ${new Date(
+              ticket.createdAt
+            ).toLocaleString()}</li>
+          </ul>
+          <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 4px;">📄 View Ticket</a>
+        `;
+      }
+
+      try {
+        await sendEmail({ to: recipient, subject, html: body });
+        console.log(
+          `📧 Email sent for ${ticket.ticketNumber} to ${recipient} [${level}]`
+        );
+      } catch (mailError) {
+        console.error(
+          `❌ Failed to send email for ticket ${ticket.ticketNumber}:`,
+          mailError.message
+        );
+      }
+    }
+  } catch (error) {
+    console.error("❌ Escalation Job Error:", error);
+  }
+};
+
+// ⏱️ Cron Job (every 6 minutes)
+cron.schedule("*/6 * * * *", () => {
+  runEscalationJob();
+});
+
+
 // import cron from 'node-cron';
 // import Ticket from '../models/Ticket.js';
 // import { sendEmail } from '../services/emailService.js';
@@ -135,118 +257,3 @@
 // cron.schedule('*/60 * * * *', () => {
 //   runEscalationJob();
 // });
-import cron from "node-cron";
-import Ticket from "../models/Ticket.js";
-import User from "../models/User.js"; // 👈 Import User model
-import { sendEmail } from "../services/emailService.js";
-
-// Time thresholds for escalation
-const SIX_HOURS = 6 * 60 * 1000;
-const NINE_HOURS = 9 * 60 * 1000;
-
-const runEscalationJob = async () => {
-  console.log("🚀 Running Ticket Escalation Job...");
-
-  const now = new Date();
-
-  try {
-    // 🔍 Get Supervisor & Director from DB
-    const [supervisor, director, admin] = await Promise.all([
-      User.findOne({ name: "Supervisior" }),
-      User.findOne({ name: "Director" }),
-      User.findOne({ role: "admin" }),
-    ]);
-    console.log(admin);
-    if (!supervisor || !director) {
-      console.error("❌ Supervisor or Director not found in database.");
-      alert("❌ Supervisor or Director not found in database.");
-      return;
-    }
-    if (!admin) {
-      console.error("❌ admin not found in database.");
-      alert("❌ admin not found in database.");
-      return;
-    }
-
-    const tickets = await Ticket.find({
-      status: { $in: ["open", "pending"] },
-      assignedTo: { $ne: null },
-    }).populate("assignedTo user");
-
-    for (const ticket of tickets) {
-      const age = now - new Date(ticket.createdAt);
-      const employee = ticket.assignedTo;
-      const ticketViewUrl = `https://service-request-jhgh.vercel.app/tickets/${ticket._id}`;
-
-      let level = null;
-      let recipient = null;
-      let subject = "";
-      let body = "";
-
-      if (age >= NINE_HOURS) {
-        level = "L2";
-        recipient = director.email;
-        subject = `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} Needs Urgent Attention`;
-        body = `
-          <p>Dear Director,</p>
-          <p>The following ticket has not been resolved in over 9 hours:</p>
-          <ul>
-            <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
-            <li><strong>Title:</strong> ${ticket.subject}</li>
-            <li><strong>Engineer:</strong> ${employee.name}</li>
-          </ul>
-          <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #b91c1c; color: white; text-decoration: none; border-radius: 4px;">🚨 View Ticket</a>
-        `;
-      } else if (age >= SIX_HOURS) {
-        level = "L1";
-        recipient = supervisor.email;
-        subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber}`;
-        body = `
-          <p>Dear Supervisor,</p>
-          <p>Ticket needs escalation after 6 hours:</p>
-          <ul>
-            <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
-            <li><strong>Title:</strong> ${ticket.subject}</li>
-            <li><strong>Engineer:</strong> ${employee.name}</li>
-          </ul>
-          <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 4px;">⚠️ View Ticket</a>
-        `;
-      } else {
-        level = "L0";
-        recipient = employee.email;
-        subject = `🕒 Reminder: Ticket ${ticket.ticketNumber}`;
-        body = `
-          <p>Hello ${employee.name},</p>
-          <p>This is a reminder for the following ticket:</p>
-          <ul>
-            <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
-            <li><strong>Title:</strong> ${ticket.subject}</li>
-            <li><strong>Created:</strong> ${new Date(
-              ticket.createdAt
-            ).toLocaleString()}</li>
-          </ul>
-          <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 4px;">📄 View Ticket</a>
-        `;
-      }
-
-      try {
-        await sendEmail({ to: recipient, subject, html: body });
-        console.log(
-          `📧 Email sent for ${ticket.ticketNumber} to ${recipient} [${level}]`
-        );
-      } catch (mailError) {
-        console.error(
-          `❌ Failed to send email for ticket ${ticket.ticketNumber}:`,
-          mailError.message
-        );
-      }
-    }
-  } catch (error) {
-    console.error("❌ Escalation Job Error:", error);
-  }
-};
-
-// ⏱️ Cron Job (every 2 mins for testing)
-cron.schedule("*/6 * * * *", () => {
-  runEscalationJob();
-});

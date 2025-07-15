@@ -61,72 +61,6 @@ export const getAllTickets = async (req, res, next) => {
   }
 };
 
-// @desc    Create a new ticket
-// @route   POST /api/tickets
-// @access  Private
-
-// export const createTicket = async (req, res, next) => {
-//   try {
-//     const { subject, description, priority, category, phone ,origin} = req.body;
-
-//     const ticket = await Ticket.create({
-//       subject,
-//       description,
-//       priority,
-//       category,
-//       phone,
-//       company: req.user.company,
-//       user: req.user._id,
-//       attachments: req.attachments || [], // Use processed attachments
-//     });
-//     if(!req.user.company){
-//       return res.status(400).json({status:'error',
-//         message:'company not found'
-//       })
-//     }
-
-//       if (!ticket) {
-//       return res.status(500).json({
-//         status: 'error',
-//         message: 'Failed to create ticket'
-//       });
-//     }
-
-//     // Map Cloudinary files to attachment object
-//     const attachments =
-//       req.files?.map((file) => ({
-//         originalname: file.originalname,
-//         filename: file.filename,
-//         path: file.path, // Cloudinary URL
-//         size: file.size,
-//         mimetype: file.mimetype,
-//       })) || [];
-
-//     const populatedTicket = await Ticket.findById(ticket._id).populate(
-//       "user company"
-//     );
-
-//     // Send email if needed
-//     await sendEmail({
-//       to: populatedTicket.user.email,
-//       subject: `SALKATECH Ticket Created: ${populatedTicket.ticketNumber}`,
-//       html: ticketCreatedTemplate(populatedTicket),
-//     });
-
-//     res.status(201).json({
-//       status: "success",
-//       data: { ticket: populatedTicket },
-//     });
-//   }  catch (error) {
-//     // Custom error message if save fails
-//     const message = error.message || 'Failed to create ticket';
-//     res.status(500).json({
-//       status: 'error',
-//       message
-//     });
-//   }
-// };
-
 export const createTicket = async (req, res, next) => {
   try {
     const { subject, description, priority, category, phone, origin } =
@@ -167,64 +101,27 @@ export const createTicket = async (req, res, next) => {
       subject: `🎫 SALKATECH Ticket Created: ${populatedTicket.ticketNumber}`,
       html: ticketCreatedTemplate(populatedTicket, origin),
     });
+const [supervisor, director, admin] = await Promise.all([
+  User.findOne({ name: "Supervisior" }),
+  User.findOne({ name: "Director" }),
+  User.findOne({ role: "admin" }),
+]);
 
-    // // 2️⃣ Email to Admin (Assuming admin email is hardcoded or fetched from DB)
-    // const adminEmail = "admin@gmail.com"; // replace with dynamic logic if needed
-    // await sendEmail({
-    //   to: adminEmail,
-    //   subject: `New Ticket Created: ${populatedTicket.ticketNumber}`,
-    //   html: `
-    //     <p>Hello Admin,</p>
-    //     <p>A new ticket has been created. Please assign it to a suitable engineer.</p>
-    //     <ul>
-    //       <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
-    //       <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
-    //       <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
-    //     </ul>
-    //     <a href="https://salka-tech-service-request-form.vercel.app/tickets/687475ff820a5df142e68df5" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>
-    //   `,
-    // });
+const adminEmail = admin?.email;
 
-    // // 3️⃣ Email to Support (and optionally L1 if severity = high)
-    // const supportEmail = "arpitaupadhayay759@gmail.com";
-    // const l1Email = "mr.yashyogesh@gmail.com";
+if (!adminEmail) {
+  return res.status(500).json({
+    status: "error",
+    message: "Admin email not found.",
+  });
+}
 
-    // let supportEmailBody = `
-    //   <p>Hello Support Team,</p>
-    //   <p>A new ticket has been generated.</p>
-    //   <ul>
-    //     <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
-    //     <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
-    //     <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
-    //   </ul>
-    // `;
+const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${populatedTicket._id}`;
+console.log("adminEmail", adminEmail);
+console.log("supervisor", supervisor);
+console.log("Director", director);
 
-    // await sendEmail({
-    //   to: supportEmail,
-    //   subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
-    //   html: supportEmailBody,
-    // });
 
-    // if (populatedTicket.priority === "high") {
-    //   await sendEmail({
-    //     to: l1Email,
-    //     subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
-    //     html:
-    //       supportEmailBody +
-    //       `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
-    //   });
-    // }
-    const [supervisor, director, admin] = await Promise.all([
-      User.findOne({ name: "Supervisior" }),
-      User.findOne({ name: "Director" }),
-      User.findOne({ role: "admin" }),
-    ]);
-
-    const adminEmail = admin[0].email; // Assuming admin email is stored in the User model
-    const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${populatedTicket._id}`;
-    console.log("adminEmail", adminEmail);
-    console.log("supervisor", supervisor);
-    console.log("Director", director);
     // 2️⃣ Email to Admin
     await sendEmail({
       to: adminEmail,
@@ -281,116 +178,6 @@ export const createTicket = async (req, res, next) => {
     res.status(500).json({ status: "error", message });
   }
 };
-// const getLeastBusyEmployee = async (companyId) => {
-//   // Get all employees of company
-//   const employees = await User.find({ role: 'employee' });
-
-//   if (!employees.length) return null;
-
-//   // Map employees with count of open tickets assigned to them
-//   const employeeTicketsCount = await Promise.all(
-//     employees.map(async (emp) => {
-//       const count = await Ticket.countDocuments({
-//         assignedTo: emp._id,
-//         status: { $in: ['open', 'pending'] }  // only open/pending tickets
-//       });
-//       return { employee: emp, count };
-//     })
-//   );
-
-//   // Sort by count ascending and return employee with least tickets
-//   employeeTicketsCount.sort((a, b) => a.count - b.count);
-
-//   return employeeTicketsCount[0].employee;
-// };
-
-// export const createTicket = async (req, res, next) => {
-//   try {
-//     const { subject, description, priority, category, phone } = req.body;
-
-//     // Get employee with least tickets for assignment
-//     const assignedEmployee = await getLeastBusyEmployee(req.user.company);
-
-//     const ticketData = {
-//       subject,
-//       description,
-//       priority,
-//       category,
-//       phone,
-//       company: req.user.company,
-//       user: req.user._id,
-//       attachments: req.attachments || []
-//     };
-
-//     if (assignedEmployee) {
-//       ticketData.assignedTo = assignedEmployee._id;
-//     }
-
-//     const ticket = await Ticket.create(ticketData);
-
-//     const populatedTicket = await Ticket.findById(ticket._id)
-//       .populate('user company assignedTo');
-
-//     // Send ticket created email to ticket owner
-//     await sendEmail({
-//       to: populatedTicket.user.email,
-//       subject: `SALKATech Ticket Created: ${populatedTicket.ticketNumber}`,
-//       html: ticketCreatedTemplate(populatedTicket)
-//     });
-
-//     // Send assignment email to employee
-//     if (assignedEmployee) {
-//       await sendEmail({
-//         to: assignedEmployee.email,
-//         subject: `New Ticket Assigned: ${populatedTicket.ticketNumber}`,
-//         html: `<p>Hello ${assignedEmployee.name},</p>
-//                <p>A new ticket has been assigned to you. Please check and resolve it ASAP.</p>
-//                <p>Ticket Subject: ${ticket.subject}</p>`
-//       });
-//     }
-
-//     res.status(201).json({
-//       status: 'success',
-//       data: { ticket: populatedTicket }
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// @desc    Get single ticket
-// @route   GET /api/tickets/:id
-// @access  Private
-// export const getTicket = async (req, res, next) => {
-//   try {
-//     const ticket = await Ticket.findById(req.params.id)
-//       .populate('user assignedTo company');
-
-//     if (!ticket) {
-//       return next(new AppError('No ticket found with that ID', 404));
-//     }
-
-//     // Authorization check
-//     if (req.user.role === 'client' && !ticket.user.equals(req.user._id)) {
-//       return next(new AppError('Not authorized to access this ticket', 403));
-//     }
-
-//     if (req.user.role === 'employee' &&
-//         !ticket.assignedTo.equals(req.user._id) &&
-//         !ticket.company.equals(req.user.company)) {
-//       return next(new AppError('Not authorized to access this ticket', 403));
-//     }
-
-//     res.status(200).json({
-//       status: 'success',
-//       data: {
-//         ticket
-//       }
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
 
 export const getTicket = async (req, res, next) => {
   try {
@@ -479,6 +266,163 @@ export const deleteTicket = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const assignTicket = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { assignedTo } = req.body;
+
+    // 1️⃣ Fetch the current ticket to get existing assigned engineer
+    const oldTicket = await Ticket.findById(id).populate("assignedTo user");
+    if (!oldTicket) {
+      return res
+        .status(404)
+        .json({ status: "error", message: "No ticket found with that ID" });
+    }
+
+    // 🔴 Prevent assigning the same engineer again
+    if (oldTicket.assignedTo?._id?.toString() === assignedTo) {
+      return res.status(400).json({
+        status: "error",
+        message: `This ticket is already assigned to Er. ${oldTicket.assignedTo.name}`,
+      });
+    }
+
+    // 2️⃣ Update the ticket with the new engineer
+    const updatedTicket = await Ticket.findByIdAndUpdate(
+      id,
+      { assignedTo },
+      { new: true, runValidators: true }
+    ).populate("assignedTo user");
+
+    const oldEngineer = oldTicket.assignedTo;
+    const newEngineer = updatedTicket.assignedTo;
+    const ticketUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${updatedTicket._id}`;
+
+    // 3️⃣ Send email to new engineer
+    if (newEngineer) {
+      await sendEmail({
+        to: newEngineer.email,
+        subject: `📌 New Ticket Assigned: ${updatedTicket.ticketNumber}`,
+        html: `
+          <p>Hello ${newEngineer.name},</p>
+          <p>A ticket has been assigned to you. Please resolve it as soon as possible.</p>
+          <ul>
+            <li><strong>Ticket:</strong> ${updatedTicket.ticketNumber}</li>
+            <li><strong>Title:</strong> ${updatedTicket.subject}</li>
+            <li><strong>Priority:</strong> ${updatedTicket.priority}</li>
+          </ul>
+          <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
+        `,
+      });
+    }
+
+    // 4️⃣ Send email to client
+    if (updatedTicket.user?.email && newEngineer?.name) {
+      const reassignedText = oldEngineer
+        ? `We have <strong>re-assigned</strong> your ticket from <strong>Er. ${oldEngineer.name}</strong> to <strong>Er. ${newEngineer.name}</strong>.`
+        : `We have <strong>assigned</strong> <strong>Er. ${newEngineer.name}</strong> to assist you with your ticket.`;
+
+      await sendEmail({
+        to: updatedTicket.user.email,
+        subject: `👨‍🔧 Engineer ${oldEngineer ? "Re-" : ""}Assigned: Ticket ${
+          updatedTicket.ticketNumber
+        }`,
+        html: `
+          <p>Hello ${updatedTicket.user.name},</p>
+          <p>${reassignedText}</p>
+          <ul>
+            <li><strong>Ticket Number:</strong> ${updatedTicket.ticketNumber}</li>
+            <li><strong>Title:</strong> ${updatedTicket.subject}</li>
+          </ul>
+          <p>They will reach out to you shortly.</p>
+          <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
+        `,
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: { ticket: updatedTicket },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateTicketStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const update = { status };
+
+    // ✔️ Agar ticket resolved ho rahi hai to resolvedAt set karo
+    if (status === "resolved") {
+      update.resolvedAt = new Date();
+    }
+
+    // ✔️ Update + user ko populate karo (jise ticket bheji gayi thi)
+    const ticket = await Ticket.findByIdAndUpdate(req.params.id, update, {
+      new: true,
+      runValidators: true,
+    }).populate("user"); // 👈 Important for email sending
+
+    if (!ticket) {
+      return next(new AppError("No ticket found with that ID", 404));
+    }
+
+    // ✔️ Send resolved email only if status === resolved
+    if (status === "resolved" && ticket.user?.email) {
+      await sendEmail({
+        to: ticket.user.email,
+        subject: `✅ Your ticket "${ticket.subject}" has been resolved`,
+        html: ticketResolvedTemplate({
+          name: ticket.user.name,
+          ticketNumber: ticket.ticketNumber,
+          subject: ticket.subject,
+          resolvedAt: ticket.resolvedAt,
+        }),
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        ticket,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+// Add this to ticketController.js
+export const getEmployeesForTicket = async (req, res, next) => {
+  try {
+    const { ticketId } = req.params;
+    const ticket = await Ticket.findById(ticketId).populate("company");
+    console.log(ticketId);
+    console.log(ticket.company._id);
+    if (!ticket) {
+      return next(new AppError("No ticket found with that ID", 404));
+    }
+
+    // Find employees who belong to the ticket's company
+    const employees = await User.find({
+      // company: ticket.company._id,
+      role: "employee",
+    }).select("name email role phone profilePhoto"); // Select only necessary fields
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        employees,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 // @desc    Assign ticket to an employee
 // @route   PATCH /api/tickets/:id/assign
@@ -719,157 +663,118 @@ export const deleteTicket = async (req, res, next) => {
 //   }
 // };
 // new assign method
-export const assignTicket = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { assignedTo } = req.body;
 
-    // 1️⃣ Fetch the current ticket to get existing assigned engineer
-    const oldTicket = await Ticket.findById(id).populate("assignedTo user");
-    if (!oldTicket) {
-      return res
-        .status(404)
-        .json({ status: "error", message: "No ticket found with that ID" });
-    }
 
-    // 🔴 Prevent assigning the same engineer again
-    if (oldTicket.assignedTo?._id?.toString() === assignedTo) {
-      return res.status(400).json({
-        status: "error",
-        message: `This ticket is already assigned to Er. ${oldTicket.assignedTo.name}`,
-      });
-    }
+// @desc    Create a new ticket
+// @route   POST /api/tickets
+// @access  Private
 
-    // 2️⃣ Update the ticket with the new engineer
-    const updatedTicket = await Ticket.findByIdAndUpdate(
-      id,
-      { assignedTo },
-      { new: true, runValidators: true }
-    ).populate("assignedTo user");
+// export const createTicket = async (req, res, next) => {
+//   try {
+//     const { subject, description, priority, category, phone ,origin} = req.body;
 
-    const oldEngineer = oldTicket.assignedTo;
-    const newEngineer = updatedTicket.assignedTo;
-    const ticketUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${updatedTicket._id}`;
+//     const ticket = await Ticket.create({
+//       subject,
+//       description,
+//       priority,
+//       category,
+//       phone,
+//       company: req.user.company,
+//       user: req.user._id,
+//       attachments: req.attachments || [], // Use processed attachments
+//     });
+//     if(!req.user.company){
+//       return res.status(400).json({status:'error',
+//         message:'company not found'
+//       })
+//     }
 
-    // 3️⃣ Send email to new engineer
-    if (newEngineer) {
-      await sendEmail({
-        to: newEngineer.email,
-        subject: `📌 New Ticket Assigned: ${updatedTicket.ticketNumber}`,
-        html: `
-          <p>Hello ${newEngineer.name},</p>
-          <p>A ticket has been assigned to you. Please resolve it as soon as possible.</p>
-          <ul>
-            <li><strong>Ticket:</strong> ${updatedTicket.ticketNumber}</li>
-            <li><strong>Title:</strong> ${updatedTicket.subject}</li>
-            <li><strong>Priority:</strong> ${updatedTicket.priority}</li>
-          </ul>
-          <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
-        `,
-      });
-    }
+//       if (!ticket) {
+//       return res.status(500).json({
+//         status: 'error',
+//         message: 'Failed to create ticket'
+//       });
+//     }
 
-    // 4️⃣ Send email to client
-    if (updatedTicket.user?.email && newEngineer?.name) {
-      const reassignedText = oldEngineer
-        ? `We have <strong>re-assigned</strong> your ticket from <strong>Er. ${oldEngineer.name}</strong> to <strong>Er. ${newEngineer.name}</strong>.`
-        : `We have <strong>assigned</strong> <strong>Er. ${newEngineer.name}</strong> to assist you with your ticket.`;
+//     // Map Cloudinary files to attachment object
+//     const attachments =
+//       req.files?.map((file) => ({
+//         originalname: file.originalname,
+//         filename: file.filename,
+//         path: file.path, // Cloudinary URL
+//         size: file.size,
+//         mimetype: file.mimetype,
+//       })) || [];
 
-      await sendEmail({
-        to: updatedTicket.user.email,
-        subject: `👨‍🔧 Engineer ${oldEngineer ? "Re-" : ""}Assigned: Ticket ${
-          updatedTicket.ticketNumber
-        }`,
-        html: `
-          <p>Hello ${updatedTicket.user.name},</p>
-          <p>${reassignedText}</p>
-          <ul>
-            <li><strong>Ticket Number:</strong> ${updatedTicket.ticketNumber}</li>
-            <li><strong>Title:</strong> ${updatedTicket.subject}</li>
-          </ul>
-          <p>They will reach out to you shortly.</p>
-          <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
-        `,
-      });
-    }
+//     const populatedTicket = await Ticket.findById(ticket._id).populate(
+//       "user company"
+//     );
 
-    res.status(200).json({
-      status: "success",
-      data: { ticket: updatedTicket },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+//     // Send email if needed
+//     await sendEmail({
+//       to: populatedTicket.user.email,
+//       subject: `SALKATECH Ticket Created: ${populatedTicket.ticketNumber}`,
+//       html: ticketCreatedTemplate(populatedTicket),
+//     });
 
-export const updateTicketStatus = async (req, res, next) => {
-  try {
-    const { status } = req.body;
-    const update = { status };
+//     res.status(201).json({
+//       status: "success",
+//       data: { ticket: populatedTicket },
+//     });
+//   }  catch (error) {
+//     // Custom error message if save fails
+//     const message = error.message || 'Failed to create ticket';
+//     res.status(500).json({
+//       status: 'error',
+//       message
+//     });
+//   }
+// };
 
-    // ✔️ Agar ticket resolved ho rahi hai to resolvedAt set karo
-    if (status === "resolved") {
-      update.resolvedAt = new Date();
-    }
 
-    // ✔️ Update + user ko populate karo (jise ticket bheji gayi thi)
-    const ticket = await Ticket.findByIdAndUpdate(req.params.id, update, {
-      new: true,
-      runValidators: true,
-    }).populate("user"); // 👈 Important for email sending
+    // // 2️⃣ Email to Admin (Assuming admin email is hardcoded or fetched from DB)
+    // const adminEmail = "admin@gmail.com"; // replace with dynamic logic if needed
+    // await sendEmail({
+    //   to: adminEmail,
+    //   subject: `New Ticket Created: ${populatedTicket.ticketNumber}`,
+    //   html: `
+    //     <p>Hello Admin,</p>
+    //     <p>A new ticket has been created. Please assign it to a suitable engineer.</p>
+    //     <ul>
+    //       <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
+    //       <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
+    //       <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
+    //     </ul>
+    //     <a href="https://salka-tech-service-request-form.vercel.app/tickets/687475ff820a5df142e68df5" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>
+    //   `,
+    // });
 
-    if (!ticket) {
-      return next(new AppError("No ticket found with that ID", 404));
-    }
+    // // 3️⃣ Email to Support (and optionally L1 if severity = high)
+    // const supportEmail = "arpitaupadhayay759@gmail.com";
+    // const l1Email = "mr.yashyogesh@gmail.com";
 
-    // ✔️ Send resolved email only if status === resolved
-    if (status === "resolved" && ticket.user?.email) {
-      await sendEmail({
-        to: ticket.user.email,
-        subject: `✅ Your ticket "${ticket.subject}" has been resolved`,
-        html: ticketResolvedTemplate({
-          name: ticket.user.name,
-          ticketNumber: ticket.ticketNumber,
-          subject: ticket.subject,
-          resolvedAt: ticket.resolvedAt,
-        }),
-      });
-    }
+    // let supportEmailBody = `
+    //   <p>Hello Support Team,</p>
+    //   <p>A new ticket has been generated.</p>
+    //   <ul>
+    //     <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
+    //     <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
+    //     <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
+    //   </ul>
+    // `;
 
-    res.status(200).json({
-      status: "success",
-      data: {
-        ticket,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-// Add this to ticketController.js
-export const getEmployeesForTicket = async (req, res, next) => {
-  try {
-    const { ticketId } = req.params;
-    const ticket = await Ticket.findById(ticketId).populate("company");
-    console.log(ticketId);
-    console.log(ticket.company._id);
-    if (!ticket) {
-      return next(new AppError("No ticket found with that ID", 404));
-    }
+    // await sendEmail({
+    //   to: supportEmail,
+    //   subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
+    //   html: supportEmailBody,
+    // });
 
-    // Find employees who belong to the ticket's company
-    const employees = await User.find({
-      // company: ticket.company._id,
-      role: "employee",
-    }).select("name email role phone profilePhoto"); // Select only necessary fields
-
-    res.status(200).json({
-      status: "success",
-      data: {
-        employees,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    // if (populatedTicket.priority === "high") {
+    //   await sendEmail({
+    //     to: l1Email,
+    //     subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
+    //     html:
+    //       supportEmailBody +
+    //       `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
+    //   });
+    // }
