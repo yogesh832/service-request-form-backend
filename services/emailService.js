@@ -6,8 +6,8 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false, // false because we're using STARTTLS
   auth: {
-    user: "contact.salkatech@gmail.com", // Your Gmail address
-    pass: "ndxwlggpexolbklv", // Your App Password (NOT Gmail password)
+    user: "contact.salkatech@gmail.com",       // Your Gmail address
+    pass: "ndxwlggpexolbklv",                  // Your App Password (NOT Gmail password)
   },
   tls: {
     rejectUnauthorized: false, // Allow TLS without strict certificate check (for dev)
