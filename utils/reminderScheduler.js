@@ -157,8 +157,8 @@ const runEscalationJob = async () => {
   try {
     // 🔍 Get Supervisor & Director from DB
     const [supervisor, director] = await Promise.all([
-      User.findOne({ name: "try supervisor" }),
-      User.findOne({ name: "try director" }),
+      User.findOne({ name: "Supervisor" }),
+      User.findOne({ name: "Director" }),
     ]);
 
     if (!supervisor || !director) {
