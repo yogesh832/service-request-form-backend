@@ -214,17 +214,17 @@ export const createTicket = async (req, res, next) => {
     //       `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
     //   });
     // }
-const [supervisor, director, admin] = await Promise.all([
+    const [supervisor, director, admin] = await Promise.all([
       User.findOne({ name: "Supervisior" }),
       User.findOne({ name: "Director" }),
       User.findOne({ role: "admin" }),
-    ]);    
+    ]);
 
     const adminEmail = admin[0].email; // Assuming admin email is stored in the User model
     const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${populatedTicket._id}`;
-console.log("adminEmail", adminEmail);
-console.log("supervisor", supervisor);
-console.log("Director", director);
+    console.log("adminEmail", adminEmail);
+    console.log("supervisor", supervisor);
+    console.log("Director", director);
     // 2️⃣ Email to Admin
     await sendEmail({
       to: adminEmail,
@@ -243,7 +243,7 @@ console.log("Director", director);
 
     // 3️⃣ Email to Support (and optionally L1 if severity = high)
     const supportEmail = adminEmail;
-    const l1Email = supervisor.email; // Assuming supervisor is the L1 engineer
+    const l1Email = supervisor?.email; // Assuming supervisor is the L1 engineer
 
     let supportEmailBody = `
   <p>Hello Support Team,</p>

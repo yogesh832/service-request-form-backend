@@ -156,7 +156,7 @@ const runEscalationJob = async () => {
       User.findOne({ name: "Director" }),
       User.findOne({ role: "admin" }),
     ]);
-console.log(admin);
+    console.log(admin);
     if (!supervisor || !director) {
       console.error("❌ Supervisor or Director not found in database.");
       alert("❌ Supervisor or Director not found in database.");
