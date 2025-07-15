@@ -151,13 +151,20 @@ const runEscalationJob = async () => {
 
   try {
     // 🔍 Get Supervisor & Director from DB
-    const [supervisor, director] = await Promise.all([
+    const [supervisor, director, admin] = await Promise.all([
       User.findOne({ name: "Supervisior" }),
       User.findOne({ name: "Director" }),
+      User.findOne({ role: "admin" }),
     ]);
-
+console.log(admin);
     if (!supervisor || !director) {
       console.error("❌ Supervisor or Director not found in database.");
+      alert("❌ Supervisor or Director not found in database.");
+      return;
+    }
+    if (!admin) {
+      console.error("❌ admin not found in database.");
+      alert("❌ admin not found in database.");
       return;
     }
 
