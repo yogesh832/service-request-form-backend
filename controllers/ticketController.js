@@ -7,6 +7,7 @@ import {
   ticketCreatedTemplate,
   ticketReminderTemplate,
   ticketResolvedTemplate,
+  generateTicketTable,
 } from "../utils/emailTemplates.js";
 import User from "../models/User.js";
 
@@ -61,6 +62,10 @@ export const getAllTickets = async (req, res, next) => {
   }
 };
 
+// @desc    Create a new ticket
+// @route   POST /api/tickets
+// @access  Private
+
 export const createTicket = async (req, res, next) => {
   try {
     const { subject, description, priority, category, phone, origin } =
@@ -101,26 +106,25 @@ export const createTicket = async (req, res, next) => {
       subject: `🎫 SALKATECH Ticket Created: ${populatedTicket.ticketNumber}`,
       html: ticketCreatedTemplate(populatedTicket, origin),
     });
-const [supervisor, director, admin] = await Promise.all([
-  User.findOne({ name: "Supervisior" }),
-  User.findOne({ name: "Director" }),
-  User.findOne({ role: "admin" }),
-]);
+    const [supervisor, director, admin] = await Promise.all([
+      User.findOne({ name: "Supervisior" }),
+      User.findOne({ name: "Director" }),
+      User.findOne({ role: "admin" }),
+    ]);
 
-const adminEmail = admin?.email;
+    const adminEmail = admin?.email;
 
-if (!adminEmail) {
-  return res.status(500).json({
-    status: "error",
-    message: "Admin email not found.",
-  });
-}
+    if (!adminEmail) {
+      return res.status(500).json({
+        status: "error",
+        message: "Admin email not found.",
+      });
+    }
 
-const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${populatedTicket._id}`;
-console.log("adminEmail", adminEmail);
-console.log("supervisor", supervisor);
-console.log("Director", director);
-
+    const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${populatedTicket._id}`;
+    console.log("adminEmail", adminEmail);
+    console.log("supervisor", supervisor);
+    console.log("Director", director);
 
     // 2️⃣ Email to Admin
     await sendEmail({
@@ -134,6 +138,7 @@ console.log("Director", director);
       <li><strong>Title:</strong> ${populatedTicket.subject}</li>
       <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
     </ul>
+      ${generateTicketTable(populatedTicket)}
     <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">🔍 View Ticket</a>
   `,
     });
@@ -150,6 +155,8 @@ console.log("Director", director);
     <li><strong>Title:</strong> ${populatedTicket.subject}</li>
     <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
   </ul>
+    ${generateTicketTable(populatedTicket)}
+
   <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">🔍 View Ticket</a>
 `;
 
@@ -165,7 +172,10 @@ console.log("Director", director);
         subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
         html:
           supportEmailBody +
-          `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
+          `
+    
+    ${generateTicketTable(populatedTicket)}
+    <p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
       });
     }
 
@@ -266,7 +276,6 @@ export const deleteTicket = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const assignTicket = async (req, res, next) => {
   try {
@@ -422,7 +431,6 @@ export const getEmployeesForTicket = async (req, res, next) => {
     next(error);
   }
 };
-
 
 // @desc    Assign ticket to an employee
 // @route   PATCH /api/tickets/:id/assign
@@ -664,7 +672,6 @@ export const getEmployeesForTicket = async (req, res, next) => {
 // };
 // new assign method
 
-
 // @desc    Create a new ticket
 // @route   POST /api/tickets
 // @access  Private
@@ -695,6 +702,25 @@ export const getEmployeesForTicket = async (req, res, next) => {
 //         message: 'Failed to create ticket'
 //       });
 //     }
+// 3️⃣ Send email to new engineer
+if (newEngineer) {
+  await sendEmail({
+    to: newEngineer.email,
+    subject: `📌 New Ticket Assigned: ${updatedTicket.ticketNumber}`,
+    html: `
+          <p>Hello ${newEngineer.name},</p>
+          <p>A ticket has been assigned to you. Please resolve it as soon as possible.</p>
+          <ul>
+            <li><strong>Ticket:</strong> ${updatedTicket.ticketNumber}</li>
+            <li><strong>Title:</strong> ${updatedTicket.subject}</li>
+            <li><strong>Priority:</strong> ${updatedTicket.priority}</li>
+          </ul>
+            ${generateTicketTable(updatedTicket)}
+
+          <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
+        `,
+  });
+}
 
 //     // Map Cloudinary files to attachment object
 //     const attachments =
@@ -709,6 +735,26 @@ export const getEmployeesForTicket = async (req, res, next) => {
 //     const populatedTicket = await Ticket.findById(ticket._id).populate(
 //       "user company"
 //     );
+await sendEmail({
+  to: updatedTicket.user.email,
+  subject: `👨‍🔧 Engineer ${oldEngineer ? "Re-" : ""}Assigned: Ticket ${
+    updatedTicket.ticketNumber
+  }`,
+  html: `
+          <p>Hello ${updatedTicket.user.name},</p>
+          <p>${reassignedText}</p>
+          <ul>
+            <li><strong>Ticket Number:</strong> ${
+              updatedTicket.ticketNumber
+            }</li>
+            <li><strong>Title:</strong> ${updatedTicket.subject}</li>
+          </ul>
+            ${generateTicketTable(updatedTicket)}
+
+          <p>They will reach out to you shortly.</p>
+          <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
+        `,
+});
 
 //     // Send email if needed
 //     await sendEmail({
@@ -731,50 +777,49 @@ export const getEmployeesForTicket = async (req, res, next) => {
 //   }
 // };
 
+// // 2️⃣ Email to Admin (Assuming admin email is hardcoded or fetched from DB)
+// const adminEmail = "admin@gmail.com"; // replace with dynamic logic if needed
+// await sendEmail({
+//   to: adminEmail,
+//   subject: `New Ticket Created: ${populatedTicket.ticketNumber}`,
+//   html: `
+//     <p>Hello Admin,</p>
+//     <p>A new ticket has been created. Please assign it to a suitable engineer.</p>
+//     <ul>
+//       <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
+//       <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
+//       <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
+//     </ul>
+//     <a href="https://salka-tech-service-request-form.vercel.app/tickets/687475ff820a5df142e68df5" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>
+//   `,
+// });
 
-    // // 2️⃣ Email to Admin (Assuming admin email is hardcoded or fetched from DB)
-    // const adminEmail = "admin@gmail.com"; // replace with dynamic logic if needed
-    // await sendEmail({
-    //   to: adminEmail,
-    //   subject: `New Ticket Created: ${populatedTicket.ticketNumber}`,
-    //   html: `
-    //     <p>Hello Admin,</p>
-    //     <p>A new ticket has been created. Please assign it to a suitable engineer.</p>
-    //     <ul>
-    //       <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
-    //       <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
-    //       <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
-    //     </ul>
-    //     <a href="https://salka-tech-service-request-form.vercel.app/tickets/687475ff820a5df142e68df5" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none;">View Ticket</a>
-    //   `,
-    // });
+// // 3️⃣ Email to Support (and optionally L1 if severity = high)
+// const supportEmail = "arpitaupadhayay759@gmail.com";
+// const l1Email = "mr.yashyogesh@gmail.com";
 
-    // // 3️⃣ Email to Support (and optionally L1 if severity = high)
-    // const supportEmail = "arpitaupadhayay759@gmail.com";
-    // const l1Email = "mr.yashyogesh@gmail.com";
+// let supportEmailBody = `
+//   <p>Hello Support Team,</p>
+//   <p>A new ticket has been generated.</p>
+//   <ul>
+//     <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
+//     <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
+//     <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
+//   </ul>
+// `;
 
-    // let supportEmailBody = `
-    //   <p>Hello Support Team,</p>
-    //   <p>A new ticket has been generated.</p>
-    //   <ul>
-    //     <li><strong>Ticket:</strong> ${populatedTicket.ticketNumber}</li>
-    //     <li><strong>Subject:</strong> ${populatedTicket.subject}</li>
-    //     <li><strong>Severity:</strong> ${populatedTicket.priority}</li>
-    //   </ul>
-    // `;
+// await sendEmail({
+//   to: supportEmail,
+//   subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
+//   html: supportEmailBody,
+// });
 
-    // await sendEmail({
-    //   to: supportEmail,
-    //   subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
-    //   html: supportEmailBody,
-    // });
-
-    // if (populatedTicket.priority === "high") {
-    //   await sendEmail({
-    //     to: l1Email,
-    //     subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
-    //     html:
-    //       supportEmailBody +
-    //       `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
-    //   });
-    // }
+// if (populatedTicket.priority === "high") {
+//   await sendEmail({
+//     to: l1Email,
+//     subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
+//     html:
+//       supportEmailBody +
+//       `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
+//   });
+// }

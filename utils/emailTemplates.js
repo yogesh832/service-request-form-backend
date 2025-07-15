@@ -298,3 +298,26 @@ export const ticketResolvedTemplate = ({ name, ticketNumber, subject, resolvedAt
     <p>Thanks,<br/>SALKATECH Support Team</p>
   </div>
 `;
+
+
+export const generateTicketTable = (ticket) => {
+  return `
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;">
+      <tr><td><strong>Ticket Number</strong></td><td>${ticket.ticketNumber}</td></tr>
+      <tr><td><strong>Subject</strong></td><td>${ticket.subject}</td></tr>
+      <tr><td><strong>Description</strong></td><td>${ticket.description}</td></tr>
+      <tr><td><strong>Category</strong></td><td>${ticket.category}</td></tr>
+      <tr><td><strong>Priority</strong></td><td>${ticket.priority}</td></tr>
+      <tr><td><strong>Status</strong></td><td>${ticket.status}</td></tr>
+      <tr><td><strong>Phone</strong></td><td>${ticket.phone}</td></tr>
+      <tr><td><strong>Created At</strong></td><td>${new Date(ticket.createdAt).toLocaleString()}</td></tr>
+      ${
+        ticket.attachments?.length
+          ? `<tr><td><strong>Attachments</strong></td><td>${ticket.attachments
+              .map((att) => att.originalname)
+              .join(", ")}</td></tr>`
+          : ""
+      }
+    </table>
+  `;
+};
