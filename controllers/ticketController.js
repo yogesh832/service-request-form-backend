@@ -219,7 +219,7 @@ export const createTicket = async (req, res, next) => {
 
     const adminEmail = admin[0].email; // Assuming admin email is stored in the User model
     const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${populatedTicket._id}`;
-
+console.log(adminEmail);
     // 2️⃣ Email to Admin
     await sendEmail({
       to: adminEmail,
