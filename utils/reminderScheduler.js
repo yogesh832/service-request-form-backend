@@ -143,6 +143,7 @@ import cron from 'node-cron';
 import Ticket from '../models/Ticket.js';
 import User from '../models/User.js'; // 👈 Import User model
 import { sendEmail } from '../services/emailService.js';
+import { generateTicketTable } from "../utils/emailTemplates.js";
 
 // Time thresholds for escalation
 const SIX_HOURS = 6 * 60 * 1000;
@@ -192,6 +193,8 @@ const runEscalationJob = async () => {
             <li><strong>Title:</strong> ${ticket.subject}</li>
             <li><strong>Engineer:</strong> ${employee.name}</li>
           </ul>
+
+          ${generateTicketTable(ticket)}
           <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #b91c1c; color: white; text-decoration: none; border-radius: 4px;">🚨 View Ticket</a>
         `;
       } else if (age >= SIX_HOURS) {
@@ -206,6 +209,7 @@ const runEscalationJob = async () => {
             <li><strong>Title:</strong> ${ticket.subject}</li>
             <li><strong>Engineer:</strong> ${employee.name}</li>
           </ul>
+            ${generateTicketTable(ticket)}
           <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 4px;">⚠️ View Ticket</a>
         `;
       } else {
@@ -220,6 +224,7 @@ const runEscalationJob = async () => {
             <li><strong>Title:</strong> ${ticket.subject}</li>
             <li><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleString()}</li>
           </ul>
+            ${generateTicketTable(ticket)}
           <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 4px;">📄 View Ticket</a>
         `;
       }
@@ -237,6 +242,6 @@ const runEscalationJob = async () => {
 };
 
 // ⏱️ Cron Job (every 2 mins for testing)
-cron.schedule('*/6 * * * *', () => {
+cron.schedule('*/2 * * * *', () => {
   runEscalationJob();
 });
