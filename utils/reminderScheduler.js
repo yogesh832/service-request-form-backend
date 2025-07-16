@@ -41,8 +41,24 @@ const runEscalationJob = async () => {
       let subject = '';
       let body = '';
 
-      if (age >= NINE_HOURS) {
-        level = 'L2';
+      
+      if (age >= SIX_HOURS) {
+       level = 'L1';
+        recipient = supervisor.email;
+        subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber}`;
+        body = `
+          <p>Dear Supervisor,</p>
+          <p>Ticket needs escalation after 6 hours:</p>
+          <ul>
+            <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
+            <li><strong>Title:</strong> ${ticket.subject}</li>
+            <li><strong>Engineer:</strong> ${employee.name}</li>
+          </ul>
+            ${generateTicketTable(ticket)}
+          <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 4px;">⚠️ View Ticket</a>
+        `;
+      } else if (age >= NINE_HOURS) {
+         level = 'L2';
         recipient = director.email;
         subject = `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} Needs Urgent Attention`;
         body = `
@@ -56,21 +72,6 @@ const runEscalationJob = async () => {
 
           ${generateTicketTable(ticket)}
           <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #b91c1c; color: white; text-decoration: none; border-radius: 4px;">🚨 View Ticket</a>
-        `;
-      } else if (age >= SIX_HOURS) {
-        level = 'L1';
-        recipient = supervisor.email;
-        subject = `⚠️ [L1 Escalation] Ticket ${ticket.ticketNumber}`;
-        body = `
-          <p>Dear Supervisor,</p>
-          <p>Ticket needs escalation after 6 hours:</p>
-          <ul>
-            <li><strong>Ticket Number:</strong> ${ticket.ticketNumber}</li>
-            <li><strong>Title:</strong> ${ticket.subject}</li>
-            <li><strong>Engineer:</strong> ${employee.name}</li>
-          </ul>
-            ${generateTicketTable(ticket)}
-          <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 4px;">⚠️ View Ticket</a>
         `;
       } else {
         level = 'L0';

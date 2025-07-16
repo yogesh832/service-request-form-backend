@@ -7,7 +7,7 @@ import {
   ticketCreatedTemplate,
   ticketReminderTemplate,
   ticketResolvedTemplate,
-  generateTicketTable
+  generateTicketTable,
 } from "../utils/emailTemplates.js";
 import User from "../models/User.js";
 
@@ -65,20 +65,14 @@ export const getAllTickets = async (req, res, next) => {
 // @desc    Create a new ticket
 // @route   POST /api/tickets
 // @access  Private
-
 export const createTicket = async (req, res, next) => {
   try {
-    const { subject, description, priority, category, phone, origin } =
-      req.body;
+    const { subject, description, priority, category, phone } = req.body;
 
-    if (!req.user.company) {
-      return res.status(400).json({
-        status: "error",
-        message: "Company not found",
-      });
-    }
+    // Get employee with least tickets for assignment
+    const assignedEmployee = await getLeastBusyEmployee(req.user.company);
 
-    const ticket = await Ticket.create({
+    const ticketData = {
       subject,
       description,
       priority,
@@ -87,46 +81,68 @@ export const createTicket = async (req, res, next) => {
       company: req.user.company,
       user: req.user._id,
       attachments: req.attachments || [],
+    };
+
+    if (assignedEmployee) {
+      ticketData.assignedTo = assignedEmployee._id;
+    }
+
+    const ticket = await Ticket.create(ticketData);
+
+    const populatedTicket = await Ticket.findById(ticket._id).populate(
+      "user company assignedTo"
+    );
+
+    // Send ticket created email to ticket owner
+    await sendEmail({
+      to: populatedTicket.user.email,
+      subject: `SALKATech Ticket Created: ${populatedTicket.ticketNumber}`,
+      html: ticketCreatedTemplate(populatedTicket),
     });
 
-    if (!ticket) {
-      return res.status(500).json({
-        status: "error",
-        message: "Failed to create ticket",
+    // Send assignment email to employee
+    if (assignedEmployee) {
+      await sendEmail({
+        to: assignedEmployee.email,
+        subject: `New Ticket Assigned: ${populatedTicket.ticketNumber}`,
+        html: `<p>Hello ${assignedEmployee.name},</p>
+               <p>A new ticket has been assigned to you. Please check and resolve it ASAP.</p>
+               <p>Ticket Subject: ${ticket.subject}</p>`,
       });
     }
 
-    const populatedTicket = await Ticket.findById(ticket._id).populate(
-      "user company"
-    );
-    console.log(populatedTicket);
- 
+    res.status(201).json({
+      status: "success",
+      data: { ticket: populatedTicket },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
- 
-    // 🔍 Get Supervisor & Director from DB
-    const [supervisor, director, admin] = await Promise.all([
-      User.findOne({ name: "Supervisor" }),
-      User.findOne({ name: "Director" }),
-      User.findOne({ role: "admin" }),
-    ]);
+// 🔍 Get Supervisor & Director from DB
+const [supervisor, director, admin] = await Promise.all([
+  User.findOne({ name: "Supervisor" }),
+  User.findOne({ name: "Director" }),
+  User.findOne({ role: "admin" }),
+]);
 
-    if (!supervisor || !director) {
-      console.error("❌ Supervisor or Director not found in database.");
-      return;
-    }
-    if (!admin) {
-      console.error("❌ admin not found in database.");
-      return;
-    }
+if (!supervisor || !director) {
+  console.error("❌ Supervisor or Director not found in database.");
+  return;
+}
+if (!admin) {
+  console.error("❌ admin not found in database.");
+  return;
+}
 
+const supervisorEmail = supervisor.email;
+const directorEmail = director.email;
+const adminEmail = admin.email;
 
-    const supervisorEmail = supervisor.email;
-    const directorEmail = director.email;
-    const adminEmail = admin.email;
-
-    console.log("Supervisor Email:", supervisorEmail);
-    console.log("Director Email:", directorEmail);
-    console.log("Admin Email:", adminEmail);
+console.log("Supervisor Email:", supervisorEmail);
+console.log("Director Email:", directorEmail);
+console.log("Admin Email:", adminEmail);
 const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${populatedTicket._id}`;
 
 // 2️⃣ Email to Admin
@@ -148,7 +164,7 @@ await sendEmail({
 
 // 3️⃣ Email to Support (and optionally L1 if severity = high)
 const supportEmail = supervisorEmail;
-const l1Email = directorEmail ;
+const l1Email = directorEmail;
 
 let supportEmailBody = `
   <p>Hello Support Team,</p>
@@ -173,22 +189,14 @@ if (populatedTicket.priority === "high") {
   await sendEmail({
     to: l1Email,
     subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
-    html: supportEmailBody + `
+    html:
+      supportEmailBody +
+      `
     
     <p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
   });
 }
 
-
-    res.status(201).json({
-      status: "success",
-      data: { ticket: populatedTicket },
-    });
-  } catch (error) {
-    const message = error.message || "Failed to create ticket";
-    res.status(500).json({ status: "error", message });
-  }
-};
 export const getTicket = async (req, res, next) => {
   try {
     const ticket = await Ticket.findById(req.params.id).populate([
@@ -277,7 +285,6 @@ export const deleteTicket = async (req, res, next) => {
   }
 };
 
-
 export const assignTicket = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -286,17 +293,18 @@ export const assignTicket = async (req, res, next) => {
     // 1️⃣ Fetch the current ticket to get existing assigned engineer
     const oldTicket = await Ticket.findById(id).populate("assignedTo user");
     if (!oldTicket) {
-      return res.status(404).json({ status: "error", message: "No ticket found with that ID" });
+      return res
+        .status(404)
+        .json({ status: "error", message: "No ticket found with that ID" });
     }
 
     // 🔴 Prevent assigning the same engineer again
- if (oldTicket.assignedTo?._id?.toString() === assignedTo) {
-  return res.status(200).json({
-    success: false,
-    message: `This ticket is already assigned to Er. ${oldTicket.assignedTo.name}`,
-  });
-}
-
+    if (oldTicket.assignedTo?._id?.toString() === assignedTo) {
+      return res.status(200).json({
+        success: false,
+        message: `This ticket is already assigned to Er. ${oldTicket.assignedTo.name}`,
+      });
+    }
 
     // 2️⃣ Update the ticket with the new engineer
     const updatedTicket = await Ticket.findByIdAndUpdate(
@@ -337,12 +345,16 @@ export const assignTicket = async (req, res, next) => {
 
       await sendEmail({
         to: updatedTicket.user.email,
-        subject: `👨‍🔧 Engineer ${oldEngineer ? "Re-" : ""}Assigned: Ticket ${updatedTicket.ticketNumber}`,
+        subject: `👨‍🔧 Engineer ${oldEngineer ? "Re-" : ""}Assigned: Ticket ${
+          updatedTicket.ticketNumber
+        }`,
         html: `
           <p>Hello ${updatedTicket.user.name},</p>
           <p>${reassignedText}</p>
           <ul>
-            <li><strong>Ticket Number:</strong> ${updatedTicket.ticketNumber}</li>
+            <li><strong>Ticket Number:</strong> ${
+              updatedTicket.ticketNumber
+            }</li>
             <li><strong>Title:</strong> ${updatedTicket.subject}</li>
           </ul>
             ${generateTicketTable(updatedTicket)}
@@ -361,8 +373,6 @@ export const assignTicket = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 export const updateTicketStatus = async (req, res, next) => {
   try {
@@ -435,9 +445,6 @@ export const getEmployeesForTicket = async (req, res, next) => {
     next(error);
   }
 };
-
-
-
 
 // const getLeastBusyEmployee = async (companyId) => {
 //   // Get all employees of company
@@ -550,7 +557,6 @@ export const getEmployeesForTicket = async (req, res, next) => {
 //   }
 // };
 
-
 // @desc    Assign ticket to an employee
 // @route   PATCH /api/tickets/:id/assign
 // @access  Private/Admin
@@ -639,7 +645,7 @@ export const getEmployeesForTicket = async (req, res, next) => {
 //     next(error);
 //   }
 // };
-// updated assign sample one 
+// updated assign sample one
 // export const assignTicket = async (req, res, next) => {
 //   try {
 //     const { id } = req.params;
@@ -721,7 +727,6 @@ export const getEmployeesForTicket = async (req, res, next) => {
 //   });
 // }
 
-
 //     res.status(200).json({
 //       status: "success",
 //       data: { ticket: updatedTicket },
@@ -730,7 +735,6 @@ export const getEmployeesForTicket = async (req, res, next) => {
 //     next(error);
 //   }
 // };
-
 
 // // Add status update controller
 // export const updateTicketStatus = async (req, res, next) => {
@@ -790,4 +794,4 @@ export const getEmployeesForTicket = async (req, res, next) => {
 //   } catch (error) {
 //     next(error);
 //   }
-// new assign method 
+// new assign method

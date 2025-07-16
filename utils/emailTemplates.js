@@ -79,9 +79,6 @@ export const welcomeEmail = ({ name, email, password }) => `
   </html>
 `;
 
-
-
-
 export const passwordResetEmail = ({ name, resetURL }) => `
   <!DOCTYPE html>
   <html>
@@ -153,12 +150,7 @@ export const passwordResetEmail = ({ name, resetURL }) => `
   </html>
 `;
 
-
-
-
-
-
-export const ticketCreatedTemplate = (ticket, origin)=> {
+export const ticketCreatedTemplate = (ticket, origin) => {
   return `
     <!DOCTYPE html>
     <html>
@@ -240,7 +232,9 @@ export const ticketCreatedTemplate = (ticket, origin)=> {
         </table>
         <p style="margin-top: 20px;">
   You can view Ticket here: 
-  <a href="https://salka-tech-service-request-form.vercel.app/tickets/${ticket._id}" target="_blank" style="color:#4b0082;">View Ticket</a>
+  <a href="https://salka-tech-service-request-form.vercel.app/tickets/${
+    ticket._id
+  }" target="_blank" style="color:#4b0082;">View Ticket</a>
 </p>
 
 
@@ -280,8 +274,12 @@ export const ticketReminderTemplate = (employeeName, tickets) => {
   `;
 };
 
-
-export const ticketResolvedTemplate = ({ name, ticketNumber, subject, resolvedAt }) => `
+export const ticketResolvedTemplate = ({
+  name,
+  ticketNumber,
+  subject,
+  resolvedAt,
+}) => `
   <div style="font-family: Arial, sans-serif; padding: 20px;">
     <h2 style="color: green;">🎉  Ticket Has Been Resolved!</h2>
     <p>Hi ,</p>
@@ -290,7 +288,9 @@ export const ticketResolvedTemplate = ({ name, ticketNumber, subject, resolvedAt
     <ul style="background: #f4f4f4; padding: 10px; border-radius: 6px;">
       <li><strong>Ticket Number:</strong> ${ticketNumber}</li>
       <li><strong>Subject:</strong> ${subject}</li>
-      <li><strong>Resolved At:</strong> ${new Date(resolvedAt).toLocaleString()}</li>
+      <li><strong>Resolved At:</strong> ${new Date(
+        resolvedAt
+      ).toLocaleString()}</li>
     </ul>
 
     <p>If you believe the issue is not completely resolved, feel free to reopen the ticket or reply to this mail.</p>
@@ -299,18 +299,26 @@ export const ticketResolvedTemplate = ({ name, ticketNumber, subject, resolvedAt
   </div>
 `;
 
-
 export const generateTicketTable = (ticket) => {
   return `
     <table border="1" cellspacing="0" cellpadding="6" style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px;">
-      <tr><td><strong>Ticket Number</strong></td><td>${ticket.ticketNumber}</td></tr>
+      <tr><td><strong>Ticket Number</strong></td><td>${
+        ticket.ticketNumber
+      }</td></tr>
       <tr><td><strong>Subject</strong></td><td>${ticket.subject}</td></tr>
-      <tr><td><strong>Description</strong></td><td>${ticket.description}</td></tr>
+      <tr><td><strong>Description</strong></td><td>${
+        ticket.description
+      }</td></tr>
       <tr><td><strong>Category</strong></td><td>${ticket.category}</td></tr>
       <tr><td><strong>Priority</strong></td><td>${ticket.priority}</td></tr>
       <tr><td><strong>Status</strong></td><td>${ticket.status}</td></tr>
       <tr><td><strong>Phone</strong></td><td>${ticket.phone}</td></tr>
-      <tr><td><strong>Created At</strong></td><td>${new Date(ticket.createdAt).toLocaleString()}</td></tr>
+<tr>
+  <td><strong>Created At</strong></td>
+  <td>${new Date(ticket.createdAt).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+  })}</td>
+</tr>
       ${
         ticket.attachments?.length
           ? `<tr><td><strong>Attachments</strong></td><td>${ticket.attachments
