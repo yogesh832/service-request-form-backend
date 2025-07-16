@@ -219,9 +219,21 @@ export const ticketCreatedTemplate = (ticket, origin) => {
           <tr><td><strong>Priority</strong></td><td>${ticket.priority}</td></tr>
           <tr><td><strong>Status</strong></td><td>${ticket.status}</td></tr>
           <tr><td><strong>Phone</strong></td><td>${ticket.phone}</td></tr>
-          <tr><td><strong>Created At</strong></td><td>${new Date(
-            ticket.createdAt
-          ).toLocaleString()}</td></tr>
+          <tr>
+  <td><strong>Created At</strong></td>
+  <td>
+    ${new Date("2025-07-16T11:08:05.194Z").toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    })}
+  </td>
+</tr>
           ${
             ticket.attachments?.length
               ? `<tr><td><strong>Attachments</strong></td><td>${ticket.attachments
