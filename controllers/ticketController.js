@@ -10,6 +10,7 @@ import {
   generateTicketTable
 } from "../utils/emailTemplates.js";
 import User from "../models/User.js";
+import { scheduleTicketReminders } from "../utils/scheduleReminders.js"; // ✅ make sure this exists
 
 // @desc    Get all tickets
 // @route   GET /api/tickets
@@ -66,10 +67,12 @@ export const getAllTickets = async (req, res, next) => {
 // @route   POST /api/tickets
 // @access  Private
 
+
 export const createTicket = async (req, res, next) => {
   try {
     const { subject, description, priority, category, phone, origin } = req.body;
 
+    // 1️⃣ Company check
     if (!req.user.company) {
       return res.status(400).json({
         status: "error",
@@ -77,7 +80,7 @@ export const createTicket = async (req, res, next) => {
       });
     }
 
-    // 1️⃣ Create the ticket
+    // 2️⃣ Create ticket
     const ticket = await Ticket.create({
       subject,
       description,
@@ -97,12 +100,12 @@ export const createTicket = async (req, res, next) => {
       });
     }
 
-    // 2️⃣ Populate fields for email
-    const populatedTicket = await Ticket.findById(ticket._id).populate("user company");
+    // 3️⃣ Populate ticket for emails
+    const populatedTicket = await Ticket.findById(ticket._id).populate("user company assignedTo");
 
     const ticketViewUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${populatedTicket._id}`;
 
-    // 3️⃣ Fetch Supervisor, Director & Admin
+    // 4️⃣ Fetch Supervisor, Director, Admin
     const [supervisor, director, admin] = await Promise.all([
       User.findOne({ name: "Supervisor" }),
       User.findOne({ name: "Director" }),
@@ -110,15 +113,18 @@ export const createTicket = async (req, res, next) => {
     ]);
 
     if (!supervisor || !director || !admin) {
-      console.error("❌ Supervisor, Director or Admin not found in DB.");
-      return;
+      console.error("❌ Supervisor, Director, or Admin not found in DB.");
+      return res.status(500).json({
+        status: "error",
+        message: "Required users not found in database",
+      });
     }
 
     const supervisorEmail = supervisor.email;
     const directorEmail = director.email;
     const adminEmail = admin.email;
 
-    // 4️⃣ Email to Admin
+    // 5️⃣ Email to Admin
     await sendEmail({
       to: adminEmail,
       subject: `🆕 New Ticket Created: ${populatedTicket.ticketNumber}`,
@@ -135,8 +141,8 @@ export const createTicket = async (req, res, next) => {
       `,
     });
 
-    // 5️⃣ Email to Supervisor
-    let supportEmailBody = `
+    // 6️⃣ Email to Support (Supervisor)
+    const supportEmailBody = `
       <p>Hello Support Team,</p>
       <p>A new ticket has been generated.</p>
       <ul>
@@ -148,47 +154,39 @@ export const createTicket = async (req, res, next) => {
       <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">🔍 View Ticket</a>
     `;
 
+    
+    if (populatedTicket.priority === "high") {
     await sendEmail({
       to: supervisorEmail,
       subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
       html: supportEmailBody,
     });
-
-    // 6️⃣ Email to Director if High Priority
-    if (populatedTicket.priority === "high") {
-      await sendEmail({
-        to: directorEmail,
-        subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
-        html: supportEmailBody + `<p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>`,
-      });
     }
 
-    // 7️⃣ Email to Client
+    // 7️⃣ Email to Director if priority = high
+    // if (populatedTicket.priority === "high") {
+    //   // await sendEmail({
+    //   //   to: directorEmail,
+    //   //   subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
+    //   //   html: supportEmailBody + `
+    //   //     <p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>
+    //   //   `,
+    //   // });
+    // }
+
+    // 8️⃣ Email to Client
     await sendEmail({
       to: populatedTicket.user.email,
       subject: `🎫 Your Ticket (${populatedTicket.ticketNumber}) has been received`,
       html: ticketCreatedTemplate(populatedTicket),
     });
 
-    // 8️⃣ Set up Reminder Logic (basic placeholder)
-    // You can trigger a cron or schedule from here based on createdAt
-    // Example: Reminder after 2 days if not resolved
-    // (Use agenda, cron, or node-schedule in production)
-    /*
-    scheduleReminder({
-      ticketId: populatedTicket._id,
-      delayInHours: 48,
-      email: populatedTicket.user.email,
-      subject: "⏰ Reminder: Your Ticket is Still Pending",
-      html: ticketReminderTemplate({
-        name: populatedTicket.user.name,
-        ticketNumber: populatedTicket.ticketNumber,
-        subject: populatedTicket.subject,
-      }),
-    });
-    */
+    // 9️⃣ Reminder & Escalation Setup (if assigned engineer is available)
+    if (populatedTicket.assignedTo) {
+      scheduleTicketReminders(populatedTicket); // ⏰ sets 2h, 6h, 9h alerts
+    }
 
-    // 9️⃣ Send response
+    // 🔟 Respond to client
     res.status(201).json({
       status: "success",
       data: { ticket: populatedTicket },

@@ -22,7 +22,7 @@ connectDB();
 
 
 // Schedulers & Reminders
-import "./utils/reminderScheduler.js";
+// import "./utils/reminderScheduler.js";
 import "./controllers/unassignedTicketReminder.js";
 
 // Initialize Express
