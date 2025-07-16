@@ -29,7 +29,7 @@ export const scheduleTicketReminders = async (ticket) => {
         console.log(`📨 [L0] Reminder to Admin for unassigned ticket ${ticket.ticketNumber}`);
         await sendEmail({
           to: admin.email,
-          subject: `🕒 Reminder: Ticket ${ticket.ticketNumber} is still unassigned`,
+          subject: `🕒 [L0] Reminder: Ticket ${ticket.ticketNumber} is still unassigned`,
           html: `
             <p>Hello Admin,</p>
             <p>This ticket has not been assigned to any engineer:</p>
@@ -60,23 +60,33 @@ export const scheduleTicketReminders = async (ticket) => {
     });
 
     // ⏰ L2 - Escalation to Director (6 minutes)
-    const l2Time = new Date(Date.now() + 6 * 60 * 1000);
-    schedule.scheduleJob(l2Time, async () => {
-      const latest = await Ticket.findById(ticket._id);
-      if (!latest.assignedTo) {
-        console.log(`📨 [L2] Escalation to Director for unassigned ticket ${ticket.ticketNumber}`);
-        await sendEmail({
-          to: director.email,
-          subject: `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} still unassigned`,
-          html: `
-            <p>Dear Director,</p>
-            <p>This ticket has not been assigned to any engineer even after 6 minutes:</p>
-            ${generateTicketTable(ticket)}
-            <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #b91c1c; color: white; text-decoration: none; border-radius: 4px;">🚨 Urgent: Assign Ticket</a>
-          `,
-        });
-      }
+// ⏰ L2 - Escalation to Director (start after 6 mins, then repeat every 2 mins)
+const l2StartTime = new Date(Date.now() + 6 * 60 * 1000);
+
+const l2Rule = new schedule.RecurrenceRule();
+l2Rule.minute = new schedule.Range(l2StartTime.getMinutes(), 59, 2); // Every 2 mins starting from l2StartTime
+l2Rule.second = l2StartTime.getSeconds(); // Ensures same second offset
+
+const l2Job = schedule.scheduleJob(l2Rule, async function l2Repeater() {
+  const latest = await Ticket.findById(ticket._id);
+  if (!latest.assignedTo) {
+    console.log(`📨 [L2 Repeat] Escalation to Director for unassigned ticket ${ticket.ticketNumber}`);
+    await sendEmail({
+      to: director.email,
+      subject: `🔴 [L2 Escalation] Ticket ${ticket.ticketNumber} STILL unassigned`,
+      html: `
+        <p>Dear Director,</p>
+        <p>This ticket remains unassigned:</p>
+        ${generateTicketTable(ticket)}
+        <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #b91c1c; color: white; text-decoration: none; border-radius: 4px;">🚨 Assign Ticket Now</a>
+      `,
     });
+  } else {
+    console.log(`✅ Ticket ${ticket.ticketNumber} is now assigned. Cancelling L2 reminders.`);
+    l2Job.cancel(); // Stop the repeated job
+  }
+});
+
 
     console.log(`✅ All unassigned ticket reminders scheduled for ${ticket.ticketNumber}`);
   } catch (error) {

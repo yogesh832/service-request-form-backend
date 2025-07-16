@@ -143,7 +143,7 @@ export const createTicket = async (req, res, next) => {
 
     // 6️⃣ Email to Support (Supervisor)
     const supportEmailBody = `
-      <p>Hello Support Team,</p>
+      <p>Hello Supervisor,</p>
       <p>A new ticket has been generated.</p>
       <ul>
         <li><strong>Ticket Number:</strong> ${populatedTicket.ticketNumber}</li>
@@ -154,24 +154,23 @@ export const createTicket = async (req, res, next) => {
       <a href="${ticketViewUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">🔍 View Ticket</a>
     `;
 
-    
     if (populatedTicket.priority === "high") {
-    await sendEmail({
-      to: supervisorEmail,
-      subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
-      html: supportEmailBody,
-    });
+      await sendEmail({
+        to: supervisorEmail,
+        subject: `📩 New Ticket Created: ${populatedTicket.ticketNumber}`,
+        html: supportEmailBody,
+      });
     }
 
-    // 7️⃣ Email to Director if priority = high
+    // 7️⃣ (Optional) Email to Director for high severity — you can uncomment if needed
     // if (populatedTicket.priority === "high") {
-    //   // await sendEmail({
-    //   //   to: directorEmail,
-    //   //   subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
-    //   //   html: supportEmailBody + `
-    //   //     <p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>
-    //   //   `,
-    //   // });
+    //   await sendEmail({
+    //     to: directorEmail,
+    //     subject: `⚠️ High Severity Ticket Alert: ${populatedTicket.ticketNumber}`,
+    //     html: supportEmailBody + `
+    //       <p>This ticket is marked as <strong>high priority</strong>. Please act immediately.</p>
+    //     `,
+    //   });
     // }
 
     // 8️⃣ Email to Client
@@ -181,10 +180,8 @@ export const createTicket = async (req, res, next) => {
       html: ticketCreatedTemplate(populatedTicket),
     });
 
-    // 9️⃣ Reminder & Escalation Setup (if assigned engineer is available)
-    if (populatedTicket.assignedTo) {
-      scheduleTicketReminders(populatedTicket); // ⏰ sets 2h, 6h, 9h alerts
-    }
+    // 9️⃣ Schedule L0–L2 reminders (for both assigned & unassigned cases)
+    await scheduleTicketReminders(populatedTicket); // ⏰ now always called regardless of assignment
 
     // 🔟 Respond to client
     res.status(201).json({
@@ -291,22 +288,21 @@ export const assignTicket = async (req, res, next) => {
     const { id } = req.params;
     const { assignedTo } = req.body;
 
-    // 1️⃣ Fetch the current ticket to get existing assigned engineer
     const oldTicket = await Ticket.findById(id).populate("assignedTo user");
     if (!oldTicket) {
-      return res.status(404).json({ status: "error", message: "No ticket found with that ID" });
+      return res.status(404).json({
+        success: false,
+        message: "No ticket found with that ID",
+      });
     }
 
-    // 🔴 Prevent assigning the same engineer again
- if (oldTicket.assignedTo?._id?.toString() === assignedTo) {
-  return res.status(200).json({
-    success: false,
-    message: `This ticket is already assigned to Er. ${oldTicket.assignedTo.name}`,
-  });
-}
+    if (oldTicket.assignedTo?._id?.toString() === assignedTo) {
+      return res.status(200).json({
+        success: false,
+        message: `This ticket is already assigned to Er. ${oldTicket.assignedTo.name}`,
+      });
+    }
 
-
-    // 2️⃣ Update the ticket with the new engineer
     const updatedTicket = await Ticket.findByIdAndUpdate(
       id,
       { assignedTo },
@@ -315,30 +311,25 @@ export const assignTicket = async (req, res, next) => {
 
     const oldEngineer = oldTicket.assignedTo;
     const newEngineer = updatedTicket.assignedTo;
+
     const ticketUrl = `https://salka-tech-service-request-form.vercel.app/tickets/${updatedTicket._id}`;
 
-    // 3️⃣ Send email to new engineer
-    if (newEngineer) {
+    // 1️⃣ Email to assigned engineer
+    if (newEngineer?.email) {
       await sendEmail({
         to: newEngineer.email,
         subject: `📌 New Ticket Assigned: ${updatedTicket.ticketNumber}`,
         html: `
           <p>Hello ${newEngineer.name},</p>
-          <p>A ticket has been assigned to you. Please resolve it as soon as possible.</p>
-          <ul>
-            <li><strong>Ticket:</strong> ${updatedTicket.ticketNumber}</li>
-            <li><strong>Title:</strong> ${updatedTicket.subject}</li>
-            <li><strong>Priority:</strong> ${updatedTicket.priority}</li>
-          </ul>
-            ${generateTicketTable(updatedTicket)}
-
+          <p>A new ticket has been assigned to you:</p>
+          ${generateTicketTable(updatedTicket)}
           <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
         `,
       });
     }
 
-    // 4️⃣ Send email to client
-    if (updatedTicket.user?.email && newEngineer?.name) {
+    // 2️⃣ Email to client
+    if (updatedTicket.user?.email) {
       const reassignedText = oldEngineer
         ? `We have <strong>re-assigned</strong> your ticket from <strong>Er. ${oldEngineer.name}</strong> to <strong>Er. ${newEngineer.name}</strong>.`
         : `We have <strong>assigned</strong> <strong>Er. ${newEngineer.name}</strong> to assist you with your ticket.`;
@@ -349,24 +340,25 @@ export const assignTicket = async (req, res, next) => {
         html: `
           <p>Hello ${updatedTicket.user.name},</p>
           <p>${reassignedText}</p>
-          <ul>
-            <li><strong>Ticket Number:</strong> ${updatedTicket.ticketNumber}</li>
-            <li><strong>Title:</strong> ${updatedTicket.subject}</li>
-          </ul>
-            ${generateTicketTable(updatedTicket)}
-
-          <p>They will reach out to you shortly.</p>
+          ${generateTicketTable(updatedTicket)}
           <a href="${ticketUrl}" style="padding: 10px 15px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 4px;">View Ticket</a>
         `,
       });
     }
 
     res.status(200).json({
-      status: "success",
-      data: { ticket: updatedTicket },
+      success: true,
+      message: "Ticket assigned successfully",
+      data: {
+        ticket: updatedTicket,
+      },
     });
   } catch (error) {
-    next(error);
+    console.error("❌ assignTicket error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
 
