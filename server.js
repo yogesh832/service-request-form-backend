@@ -12,6 +12,8 @@ import exportRoutes from "./routes/exportRoutes.js";
 // server.js (add this with other imports)
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import "./utils/reminderScheduler.js";
+import "./controllers/unassignedTicketReminder.js";
+
 dotenv.config();
 
 const app = express();
