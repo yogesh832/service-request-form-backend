@@ -6,7 +6,7 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false, // false because we're using STARTTLS
   auth: {
-    user: "salka.support@salkatech.com", // Your Gmail address
+    user: "contact.salkatech@gmail.com", // Your Gmail address
     pass: "ndxwlggpexolbklv", // Your App Password (NOT Gmail password)
   },
   tls: {
@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 // Step 2: Send email function
 export const sendEmail = async ({ to, subject, html }) => {
   const mailOptions = {
-    from: `SALKATECH <salka.support@salkatech.com>`,
+    from: `SALKATECH <contact.salkatech@gmail.com>`,
     to,
     subject,
     html,
